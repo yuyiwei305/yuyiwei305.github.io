@@ -809,6 +809,7 @@ mermaid:
   enable: true
   # Available themes: default | dark | forest | neutral
   theme: forest
+  cdn: https://unpkg.zhimg.com/mermaid@8.4.8/dist/mermaid.min.js
 
 
 # ---------------------------------------------------------------

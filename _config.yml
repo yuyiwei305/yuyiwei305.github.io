@@ -120,11 +120,3 @@ symbols_count_time:
   symbols: true
   total_symbols: true
   total_time: true
-
-
-# # mermaid chart
-# mermaid: ## mermaid url https://github.com/knsv/mermaid
-#   enable: true  # default true
-#   version: "8.0.0" 
-#   options:  # find more api options from https://github.com/knsv/mermaid/blob/master/src/mermaidAPI.js
-#     #startOnload: true  // default true

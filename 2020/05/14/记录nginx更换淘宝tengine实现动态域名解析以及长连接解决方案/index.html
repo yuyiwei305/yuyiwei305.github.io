@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"visionyu.xyz","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="问题描述目前公司很多服务会通过nginx调用到外部服务，业务量起来的时候，通过查看上游日志，可以看到有大量的连接产生，随着连接数增加会给服务器带来巨大压力。所以针对这个问题去做一些性能优化。优化项如下：  更换基础nginx镜像为淘宝tengine镜像 — tengine 支持upstream同时还支持域名动态解析，具体模块为： ngx_http_upstream_keepalive_module">
+<meta property="og:type" content="article">
+<meta property="og:title" content="记录nginx更换淘宝tengine实现动态域名解析以及长连接解决方案">
+<meta property="og:url" content="https://visionyu.xyz/2020/05/14/%E8%AE%B0%E5%BD%95nginx%E6%9B%B4%E6%8D%A2%E6%B7%98%E5%AE%9Dtengine%E5%AE%9E%E7%8E%B0%E5%8A%A8%E6%80%81%E5%9F%9F%E5%90%8D%E8%A7%A3%E6%9E%90%E4%BB%A5%E5%8F%8A%E9%95%BF%E8%BF%9E%E6%8E%A5%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/index.html">
+<meta property="og:site_name" content="VisIonyu 的日常">
+<meta property="og:description" content="问题描述目前公司很多服务会通过nginx调用到外部服务，业务量起来的时候，通过查看上游日志，可以看到有大量的连接产生，随着连接数增加会给服务器带来巨大压力。所以针对这个问题去做一些性能优化。优化项如下：  更换基础nginx镜像为淘宝tengine镜像 — tengine 支持upstream同时还支持域名动态解析，具体模块为： ngx_http_upstream_keepalive_module">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-05-14T09:52:39.000Z">
+<meta property="article:modified_time" content="2020-05-14T09:54:35.172Z">
+<meta property="article:author" content="VisIonyu">
+<meta property="article:tag" content="nginx">
+<meta property="article:tag" content="dns">
+<meta property="article:tag" content="tengine">
+<meta property="article:tag" content="keepalive">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://visionyu.xyz/2020/05/14/%E8%AE%B0%E5%BD%95nginx%E6%9B%B4%E6%8D%A2%E6%B7%98%E5%AE%9Dtengine%E5%AE%9E%E7%8E%B0%E5%8A%A8%E6%80%81%E5%9F%9F%E5%90%8D%E8%A7%A3%E6%9E%90%E4%BB%A5%E5%8F%8A%E9%95%BF%E8%BF%9E%E6%8E%A5%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>记录nginx更换淘宝tengine实现动态域名解析以及长连接解决方案 | VisIonyu 的日常</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">VisIonyu 的日常</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://visionyu.xyz/2020/05/14/%E8%AE%B0%E5%BD%95nginx%E6%9B%B4%E6%8D%A2%E6%B7%98%E5%AE%9Dtengine%E5%AE%9E%E7%8E%B0%E5%8A%A8%E6%80%81%E5%9F%9F%E5%90%8D%E8%A7%A3%E6%9E%90%E4%BB%A5%E5%8F%8A%E9%95%BF%E8%BF%9E%E6%8E%A5%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="VisIonyu">
+      <meta itemprop="description" content="日常生活">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="VisIonyu 的日常">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          记录nginx更换淘宝tengine实现动态域名解析以及长连接解决方案
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-05-14 17:52:39" itemprop="dateCreated datePublished" datetime="2020-05-14T17:52:39+08:00">2020-05-14</time>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>6.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>6 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h3><p>目前公司很多服务会通过nginx调用到外部服务，业务量起来的时候，通过查看上游日志，可以看到有大量的连接产生，随着连接数增加会给服务器带来巨大压力。<br>所以针对这个问题去做一些性能优化。<br>优化项如下：</p>
+<ol>
+<li>更换基础nginx镜像为淘宝tengine镜像 — tengine 支持upstream同时还支持域名动态解析，具体模块为： ngx_http_upstream_keepalive_module，ngx_http_upstream_dynamic_module。由于没有官方提供的tengine docker镜像 需要自己编译打包。</li>
+<li>修改pod dns选项优化查询域。</li>
+<li>配置文件参数调优,主要针对 https，以及websocket。</li>
+</ol>
+<a id="more"></a>
+
+
+<h3 id="执行细节"><a href="#执行细节" class="headerlink" title="执行细节"></a>执行细节</h3><h5 id="1-编译tengine-Dockerfile"><a href="#1-编译tengine-Dockerfile" class="headerlink" title="1. 编译tengine Dockerfile"></a>1. 编译tengine Dockerfile</h5><p>这里没啥说的，一点一点趟坑搞出来的，直接给出Dockerfile:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br></pre></td><td class="code"><pre><span class="line">FROM debian:buster-slim</span><br><span class="line">LABEL maintainer&#x3D;&quot;VisIon  &lt;yuyiwei@bituniverse.org&gt;&quot;</span><br><span class="line"></span><br><span class="line">ENV TENGINE_VERSION 2.3.2</span><br><span class="line">ENV CONFIG &quot;\</span><br><span class="line">        --user&#x3D;nginx \</span><br><span class="line">        --group&#x3D;nginx \</span><br><span class="line">        --prefix&#x3D;&#x2F;etc&#x2F;nginx \</span><br><span class="line">        --sbin-path&#x3D;&#x2F;usr&#x2F;sbin&#x2F;nginx \</span><br><span class="line">        --conf-path&#x3D;&#x2F;etc&#x2F;nginx&#x2F;nginx.conf \</span><br><span class="line">        --lock-path&#x3D;&#x2F;var&#x2F;lock&#x2F;nginx.lock \</span><br><span class="line">        --pid-path&#x3D;&#x2F;var&#x2F;run&#x2F;nginx.pid \</span><br><span class="line">        --error-log-path&#x3D;&#x2F;var&#x2F;log&#x2F;nginx&#x2F;error.log \</span><br><span class="line">        --http-log-path&#x3D;&#x2F;var&#x2F;log&#x2F;nginx&#x2F;access.log \</span><br><span class="line">        --http-client-body-temp-path&#x3D;&#x2F;var&#x2F;cache&#x2F;nginx&#x2F;client_temp \</span><br><span class="line">        --http-proxy-temp-path&#x3D;&#x2F;var&#x2F;cache&#x2F;nginx&#x2F;proxy_temp \</span><br><span class="line">        --http-fastcgi-temp-path&#x3D;&#x2F;var&#x2F;cache&#x2F;nginx&#x2F;fastcgi_temp \</span><br><span class="line">        --http-uwsgi-temp-path&#x3D;&#x2F;var&#x2F;cache&#x2F;nginx&#x2F;uwsgi_temp \</span><br><span class="line">        --http-scgi-temp-path&#x3D;&#x2F;var&#x2F;cache&#x2F;nginx&#x2F;scgi_temp \</span><br><span class="line">        --with-http_ssl_module \</span><br><span class="line">        --with-http_gzip_static_module \</span><br><span class="line">        --with-http_gunzip_module \</span><br><span class="line">        --with-http_auth_request_module \</span><br><span class="line">        --with-http_image_filter_module \</span><br><span class="line">        --with-http_addition_module \</span><br><span class="line">        --with-http_dav_module \</span><br><span class="line">        --with-http_realip_module \</span><br><span class="line">        --with-http_v2_module \</span><br><span class="line">        --with-http_stub_status_module \</span><br><span class="line">        --with-http_sub_module \</span><br><span class="line">        --with-http_xslt_module \</span><br><span class="line">        --with-http_flv_module \</span><br><span class="line">        --with-http_mp4_module \</span><br><span class="line">        --with-http_degradation_module \</span><br><span class="line">        --add-module&#x3D;modules&#x2F;ngx_http_upstream_dynamic_module \</span><br><span class="line">        &quot;</span><br><span class="line"></span><br><span class="line">RUN set -x \</span><br><span class="line">    &amp;&amp; addgroup --system --gid 101 nginx \</span><br><span class="line">    &amp;&amp; adduser --system --disabled-login --ingroup nginx --no-create-home --home &#x2F;nonexistent --gecos &quot;nginx user&quot; --shell &#x2F;bin&#x2F;false --uid 101 nginx \</span><br><span class="line">    &amp;&amp; apt-get update \</span><br><span class="line">    &amp;&amp; apt-get -y install \</span><br><span class="line">       gcc \</span><br><span class="line">       libxslt-dev \</span><br><span class="line">       libxml2-dev \</span><br><span class="line">       libc-dev \</span><br><span class="line">       make \</span><br><span class="line">       linux-libc-dev \</span><br><span class="line">       curl \</span><br><span class="line">       libpcre3 \</span><br><span class="line">       libpcre3-dev \</span><br><span class="line">       openssl \</span><br><span class="line">       libssl-dev \</span><br><span class="line">       zlib1g  \</span><br><span class="line">       zlib1g-dev \</span><br><span class="line">       libgd-dev \</span><br><span class="line">       libjemalloc-dev \</span><br><span class="line">       libjemalloc2 \</span><br><span class="line">       curl \</span><br><span class="line">       net-tools \</span><br><span class="line">       procps \</span><br><span class="line"></span><br><span class="line">    &amp;&amp; curl &quot;http:&#x2F;&#x2F;tengine.taobao.org&#x2F;download&#x2F;tengine-$TENGINE_VERSION.tar.gz&quot; -o tengine.tar.gz \</span><br><span class="line">    &amp;&amp; mkdir -p &#x2F;usr&#x2F;src \</span><br><span class="line">    &amp;&amp; mkdir -p &#x2F;var&#x2F;cache&#x2F;nginx \</span><br><span class="line">    &amp;&amp; chown nginx:nginx &#x2F;var&#x2F;cache&#x2F;nginx \</span><br><span class="line">    &amp;&amp; tar -zxC &#x2F;usr&#x2F;src -f tengine.tar.gz \</span><br><span class="line">    &amp;&amp; rm tengine.tar.gz \</span><br><span class="line">    &amp;&amp; cd &#x2F;usr&#x2F;src&#x2F;tengine-$TENGINE_VERSION \</span><br><span class="line">    &amp;&amp; .&#x2F;configure $CONFIG \</span><br><span class="line">    &amp;&amp; make \</span><br><span class="line">    &amp;&amp; make install \</span><br><span class="line">    &amp;&amp; rm -rf &#x2F;etc&#x2F;nginx&#x2F;html&#x2F; \</span><br><span class="line">    &amp;&amp; mkdir &#x2F;etc&#x2F;nginx&#x2F;conf.d&#x2F; \</span><br><span class="line">    &amp;&amp; mkdir -p &#x2F;usr&#x2F;share&#x2F;nginx&#x2F;html&#x2F;  \</span><br><span class="line">    &amp;&amp; install -m644 html&#x2F;index.html &#x2F;usr&#x2F;share&#x2F;nginx&#x2F;html&#x2F; \</span><br><span class="line">    &amp;&amp; install -m644 html&#x2F;50x.html &#x2F;usr&#x2F;share&#x2F;nginx&#x2F;html&#x2F; \</span><br><span class="line">    &amp;&amp; strip &#x2F;usr&#x2F;sbin&#x2F;nginx* \</span><br><span class="line">    &amp;&amp; cd &#x2F;etc&#x2F;nginx \</span><br><span class="line">    &amp;&amp; rm -rf &#x2F;usr&#x2F;src&#x2F;nginx-$NGINX_VERSION \</span><br><span class="line">    &amp;&amp; ln -sf &#x2F;dev&#x2F;stdout &#x2F;var&#x2F;log&#x2F;nginx&#x2F;access.log \</span><br><span class="line">    &amp;&amp; ln -sf &#x2F;dev&#x2F;stderr &#x2F;var&#x2F;log&#x2F;nginx&#x2F;error.log</span><br><span class="line"></span><br><span class="line">COPY nginx.conf &#x2F;etc&#x2F;nginx&#x2F;nginx.conf</span><br><span class="line">COPY default.conf &#x2F;etc&#x2F;nginx&#x2F;conf.d&#x2F;default.conf</span><br><span class="line"></span><br><span class="line">EXPOSE 80</span><br><span class="line"></span><br><span class="line">CMD [&quot;nginx&quot;, &quot;-g&quot;, &quot;daemon off;&quot;]</span><br></pre></td></tr></table></figure>
+
+<p>default.conf 没啥说的 nginx.conf 因人而异。我这里给出我的：<br>nginx.conf</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line">user nginx;</span><br><span class="line">worker_processes auto;</span><br><span class="line">pid &#x2F;var&#x2F;run&#x2F;nginx.pid;</span><br><span class="line">worker_rlimit_nofile 16384;</span><br><span class="line"></span><br><span class="line">events &#123;</span><br><span class="line">  worker_connections 8192;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">http &#123;</span><br><span class="line">  server_names_hash_bucket_size 128;</span><br><span class="line">  map $http_upgrade $connection_upgrade &#123;</span><br><span class="line">      default upgrade;</span><br><span class="line">      &#39;&#39; close;</span><br><span class="line">  &#125;</span><br><span class="line">  log_format main</span><br><span class="line">      &#39;$remote_addr $host $remote_user [$time_local] &quot;$request&quot; $status $bytes_sent &quot;$http_referer&quot; &quot;$http_user_agent&quot; $request_time $upstream_response_time $upstream_addr&#39;;</span><br><span class="line"></span><br><span class="line">  client_header_timeout  300s; # If after this time the client send nothing, nginx returns error &quot;Request time out&quot; (408).</span><br><span class="line">  client_body_timeout    300s;</span><br><span class="line">  send_timeout           300s; # if after this time client will take nothing, then nginx is shutting down the connection.</span><br><span class="line">  proxy_connect_timeout  10s;</span><br><span class="line">  proxy_read_timeout     10s;</span><br><span class="line">  proxy_send_timeout     10s;</span><br><span class="line">  connection_pool_size        256;</span><br><span class="line">  client_header_buffer_size    1k;</span><br><span class="line">  large_client_header_buffers    4 2k;</span><br><span class="line">  request_pool_size        4k;</span><br><span class="line">  output_buffers   4 32k;</span><br><span class="line">  postpone_output  1460;</span><br><span class="line">  sendfile        on;</span><br><span class="line">  tcp_nopush             on;</span><br><span class="line">  keepalive_timeout      60 30;</span><br><span class="line">  tcp_nodelay            on;</span><br><span class="line">  real_ip_header X-Forwarded-For;</span><br><span class="line">  set_real_ip_from 0.0.0.0&#x2F;0;</span><br><span class="line"></span><br><span class="line">  client_max_body_size       10m;</span><br><span class="line">  client_body_buffer_size    256k;</span><br><span class="line"></span><br><span class="line">  gzip on;</span><br><span class="line">  gzip_min_length  1100;</span><br><span class="line">  gzip_comp_level  4;</span><br><span class="line">  gzip_buffers     4 32k;</span><br><span class="line">  gzip_types       application&#x2F;json text&#x2F;plain application&#x2F;x-javascript text&#x2F;xml text&#x2F;css;</span><br><span class="line"></span><br><span class="line">  ignore_invalid_headers    on;</span><br><span class="line">  resolver 172.20.0.10 valid&#x3D;10s ipv6&#x3D;off;  # only valid in bthub-vpc oregon</span><br><span class="line">  limit_req_status 555;                  # 将受限制的请求错误码转换为555</span><br><span class="line">  proxy_ssl_server_name on;     # 针对SNI的https保证能通</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  access_log &#x2F;var&#x2F;log&#x2F;nginx&#x2F;access.log main;</span><br><span class="line">  error_log &#x2F;var&#x2F;log&#x2F;nginx&#x2F;error.log;</span><br><span class="line"></span><br><span class="line">  include &#x2F;etc&#x2F;nginx&#x2F;conf.d&#x2F;*.conf;</span><br><span class="line">  include &#x2F;etc&#x2F;nginx&#x2F;sites-enabled&#x2F;*;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>至此tengine 2.3.2 镜像已经制作完成。 使用debian:buster-slim 作为基础镜像原因就是它支持libc。</p>
+<h5 id="2-优化查询域，这个是k8s里需要在deployment-改动的地方，主要的做法是，把默认的ndots-改小。"><a href="#2-优化查询域，这个是k8s里需要在deployment-改动的地方，主要的做法是，把默认的ndots-改小。" class="headerlink" title="2. 优化查询域，这个是k8s里需要在deployment 改动的地方，主要的做法是，把默认的ndots 改小。"></a>2. 优化查询域，这个是k8s里需要在deployment 改动的地方，主要的做法是，把默认的ndots 改小。</h5><p>这里给出demo</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">dnsConfig:</span><br><span class="line">        options:</span><br><span class="line">        - name: single-request-reopen</span><br><span class="line">        - name: ndots</span><br><span class="line">          value: &quot;4&quot;</span><br><span class="line">      dnsPolicy: ClusterFirst</span><br></pre></td></tr></table></figure>
+<p>其中 single-request-reopen  这个参数 alpine 是不支持的。 所以采用了 debian:buster-slim</p>
+<h5 id="3-配置趟坑"><a href="#3-配置趟坑" class="headerlink" title="3. 配置趟坑"></a>3. 配置趟坑</h5><p>主要是业务的配置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">upstream pionex-broker &#123;</span><br><span class="line">   dynamic_resolve fallback&#x3D;stale fail_timeout&#x3D;30s;</span><br><span class="line">   server xxx.com:443;</span><br><span class="line">   keepalive 32;</span><br><span class="line">   keepalive_timeout 30s; # 设置后端连接的最大idle时间为30s</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里如果使用的是https,上游后面一定要跟 端口 —&gt; 443 否则会报错。</p>
+<p>到此问题已经解决使用了 upstream  keepalive 和 dynamic_resolve 可以有效解决连接数过大导致性能压力问题。<br>经过测试，连接数由原来的几万瞬间降低到几百，延迟也由原来十几毫秒降低到几毫秒。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/nginx/" rel="tag"># nginx</a>
+              <a href="/tags/dns/" rel="tag"># dns</a>
+              <a href="/tags/tengine/" rel="tag"># tengine</a>
+              <a href="/tags/keepalive/" rel="tag"># keepalive</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/04/22/nginx%E8%AF%86%E5%88%AB%E7%9C%9F%E5%AE%9E%E5%AE%A2%E6%88%B7%E7%AB%AFip%E5%B9%B6%E9%99%90%E9%80%9F%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" rel="prev" title="nginx识别真实客户端ip并限速解决方案">
+      <i class="fa fa-chevron-left"></i> nginx识别真实客户端ip并限速解决方案
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#问题描述"><span class="nav-number">1.</span> <span class="nav-text">问题描述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#执行细节"><span class="nav-number">2.</span> <span class="nav-text">执行细节</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-编译tengine-Dockerfile"><span class="nav-number">2.0.1.</span> <span class="nav-text">1. 编译tengine Dockerfile</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-优化查询域，这个是k8s里需要在deployment-改动的地方，主要的做法是，把默认的ndots-改小。"><span class="nav-number">2.0.2.</span> <span class="nav-text">2. 优化查询域，这个是k8s里需要在deployment 改动的地方，主要的做法是，把默认的ndots 改小。</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-配置趟坑"><span class="nav-number">2.0.3.</span> <span class="nav-text">3. 配置趟坑</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">VisIonyu</p>
+  <div class="site-description" itemprop="description">日常生活</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">VisIonyu</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">20k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">19 分钟</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginModelPath":"assets/","model":{"jsonPath":"/live2dw/assets/haru02.model.json"},"display":{"position":"right","width":225,"height":450},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

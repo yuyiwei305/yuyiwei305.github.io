@@ -201,21 +201,23 @@
       
           <p>整理了一些，以供自己日常使用：</p>
 <ol start="0">
-<li>前提变量</li>
-</ol>
+<li><p>前提变量</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">export ZOOKEEPERS&#x3D;zookeeper:2181 #自己根据需要改,新版本基本上用不到这个</span><br><span class="line">export KAFKAS&#x3D;kafka:9092 #自己根据需要改</span><br></pre></td></tr></table></figure>
-
-<ol>
-<li>列出所有Topic:<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kafka-topics.sh  --describe --bootstrap-server $KAFKAS</span><br></pre></td></tr></table></figure></li>
-<li>创建一个topic<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kafka-topics.sh  --create --topic test --bootstrap-server $KAFKAS --partitions 3 --replication-factor 2</span><br></pre></td></tr></table></figure></li>
-<li>消费者订阅主题<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kafka-console-consumer.sh --bootstrap-server $KAFKAS --topic test</span><br></pre></td></tr></table></figure></li>
-<li>生产者向topic发送消息<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kafka-console-producer.sh --broker-list $KAFKAS  --topic test</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>列出所有Topic:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kafka-topics.sh  --describe --bootstrap-server $KAFKAS</span><br></pre></td></tr></table></figure></li>
+<li><p>创建一个topic</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kafka-topics.sh  --create --topic test --bootstrap-server $KAFKAS --partitions 3 --replication-factor 2</span><br></pre></td></tr></table></figure></li>
+<li><p>消费者订阅主题</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kafka-console-consumer.sh --bootstrap-server $KAFKAS --topic test</span><br></pre></td></tr></table></figure></li>
+<li><p>生产者向topic发送消息</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kafka-console-producer.sh --broker-list $KAFKAS  --topic test</span><br></pre></td></tr></table></figure>
 
 
 </li>
 </ol>
 <ol start="5">
-<li>压力测试<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#生产者</span><br><span class="line">kafka-run-class.sh org.apache.kafka.tools.ProducerPerformance --print-metrics --topic test --num-records 1000000 --throughput 100000 --record-size 100 --producer-props bootstrap.servers&#x3D;$KAFKAS buffer.memory&#x3D;67108864 batch.size&#x3D;8196</span><br><span class="line"></span><br><span class="line">#消费者</span><br><span class="line">kafka-consumer-perf-test.sh --broker-list $KAFKAS --messages 1000000 --threads 1 --topic test --print-metrics</span><br></pre></td></tr></table></figure>
+<li>压力测试<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#生产者</span><br><span class="line">kafka-run-class.sh org.apache.kafka.tools.ProducerPerformance --print-metrics --topic test --num-records 6000000 --throughput 100000 --record-size 100 --producer-props bootstrap.servers&#x3D;$KAFKAS buffer.memory&#x3D;67108864 batch.size&#x3D;32768 linger.ms&#x3D;20 acks&#x3D;1</span><br><span class="line"></span><br><span class="line">#消费者</span><br><span class="line">kafka-consumer-perf-test.sh --broker-list $KAFKAS --messages 1000000 --threads 1 --topic test --print-metrics</span><br></pre></td></tr></table></figure>
 
 
 </li>

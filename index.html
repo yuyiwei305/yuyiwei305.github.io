@@ -147,6 +147,95 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://visionyu.xyz/2020/05/28/kafka%E9%80%9F%E5%BA%A6%E5%BF%AB%E7%9A%84%E5%8E%9F%E5%9B%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="VisIonyu">
+      <meta itemprop="description" content="日常生活">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="VisIonyu 的日常">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/05/28/kafka%E9%80%9F%E5%BA%A6%E5%BF%AB%E7%9A%84%E5%8E%9F%E5%9B%A0/" class="post-title-link" itemprop="url">kafka速度快的原因</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-05-28 16:47:17" itemprop="dateCreated datePublished" datetime="2020-05-28T16:47:17+08:00">2020-05-28</time>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="kafka速度快的原因"><a href="#kafka速度快的原因" class="headerlink" title="kafka速度快的原因"></a>kafka速度快的原因</h3><p>我们都知道Kafka非常快，比绝大多数的市场上其他消息中间件都要快。这里来研究下那么为什么Kafka那么快（当然不会是因为它用了Scala）。<br>Kafka的消息是保存或缓存在磁盘上的，一般认为在磁盘上读写数据是会降低性能的，因为寻址会比较消耗时间。<br>但是实际上，Kafka其中一个特性却是高吞吐率，即使是普通的服务器，Kafka也能轻松支持每秒百万级的写入请求，超过了大部分的消息中间件。这种特性使得Kafka在日志处理等海量数据场景中应用广泛。那么为什么Kafka速度那么快，可以从数据写入和数据读取两方面来分析。</p>
+<p>Kafka的数据写入（生产者）</p>
+<p>生产者（Producer）是负责向Kafka提交数据的，Kafka会把收到的消息都写入到磁盘中，因此可以认为它绝对不会丢失数据。</p>
+<p>而为了优化写入速度，Kafka采用了两种技术，一种是顺序写入，一种是MMFile。</p>
+<p>顺序写入</p>
+<p>磁盘读写的快慢取决于你怎么使用它，一般可以分为顺序读写或者随机读写。</p>
+<p>因为硬盘是机械结构，每次读写都会经过一个【寻址-&gt;写入】的过程，其中的寻址是一个十分耗时的机械动作，所以硬盘最讨厌随机I/O，最喜欢顺序I/O。为了提高读写硬盘的速度，Kafka就是使用的顺序I/O。而且Linux对于磁盘的读写优化也比较多，包括read-ahead、write-behind和磁盘缓存等。更多的，对Java的内存管理和垃圾回收会有优化，因为如果在内存做这些操作的时候，一个会导致Java对象的内存开销很大，另一个是随着堆内存数据的增多，Java的GC时间会变得很长。</p>
+<p>因此可以总结出使用磁盘操作有以下几个好处：</p>
+<p>1.磁盘顺序读写速度超过内存随机读写。</p>
+<p>2.JVM的GC效率低，内存占用大，使用磁盘可以避免这一问题。</p>
+<p>3.系统冷启动后，磁盘上的缓存依然可用（内存一旦关机数据就会清空，持久化到磁盘上则不会）。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/05/28/kafka%E9%80%9F%E5%BA%A6%E5%BF%AB%E7%9A%84%E5%8E%9F%E5%9B%A0/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://visionyu.xyz/2020/05/27/kafka-cmd-%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -223,7 +312,7 @@
 </li>
 </ol>
 <ol start="6">
-<li>下载kafka安装包<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#image: openjdk:8-slim-buster</span><br><span class="line">apt-get update &amp;&amp; apt-get install -y wget curl net-tools vim procps</span><br><span class="line">wget https:&#x2F;&#x2F;archive.apache.org&#x2F;dist&#x2F;kafka&#x2F;2.4.1&#x2F;kafka_2.12-2.4.1.tgz  &amp;&amp; tar -xzf kafka_2.12-2.4.1.tgz  kafka</span><br></pre></td></tr></table></figure>
+<li>下载kafka安装包<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#image: openjdk:8-slim-buster</span><br><span class="line">apt-get update &amp;&amp; apt-get install -y wget curl net-tools vim procps</span><br><span class="line">wget https:&#x2F;&#x2F;archive.apache.org&#x2F;dist&#x2F;kafka&#x2F;2.4.1&#x2F;kafka_2.12-2.4.1.tgz  &amp;&amp; tar -xzf kafka_2.12-2.4.1.tgz</span><br></pre></td></tr></table></figure>
 </li>
 </ol>
 
@@ -920,90 +1009,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://visionyu.xyz/2020/04/04/Windows-%E4%BD%BF%E7%94%A8-hexo-%E8%B9%9A%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9D%91/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="VisIonyu">
-      <meta itemprop="description" content="日常生活">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="VisIonyu 的日常">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/04/04/Windows-%E4%BD%BF%E7%94%A8-hexo-%E8%B9%9A%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9D%91/" class="post-title-link" itemprop="url">Windows 使用 hexo 蹚的一些坑</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-04-04 10:15:07" itemprop="dateCreated datePublished" datetime="2020-04-04T10:15:07+08:00">2020-04-04</time>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>968</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>1 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>一般情况下本人写blog会用公司的mac来搞,适逢清明放假所以把环境整理了下,用家里的windows来写。整个过程中还是有一些坑的,特此记录下。</p>
-<h1 id="1-nodejs-版本问题"><a href="#1-nodejs-版本问题" class="headerlink" title="1. nodejs 版本问题"></a>1. nodejs 版本问题</h1><p>由于很少在家coding,家中的nodejs版本过低。导致在安装hexo出现各种问题,网上搜了下资料发现现在的nodejs版本管理工具已经很成熟了，随便找了一个叫做gnvm 还挺好使。<br>安装很简单不需要复杂的操作,直接下载就能用。<br>GNVM 是一个简单的 Node.js 多版本管理器，类似 nvm nvmw nodist。很简单直接用了。</p>
-<h3 id="安装-amp-验证"><a href="#安装-amp-验证" class="headerlink" title="安装 &amp; 验证"></a>安装 &amp; 验证</h3><p>直接下载到nodejs所在目录即可，如果没安装nodejs，自己找一个目录放进去就好。由于我是之前就有所以就直接放进去了</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -L https:&#x2F;&#x2F;github.com&#x2F;Kenshin&#x2F;gnvm-bin&#x2F;blob&#x2F;master&#x2F;64-bit&#x2F;gnvm.exe?raw&#x3D;true -o gnvm.exe</span><br></pre></td></tr></table></figure>
-
-<p>下载其实也没有按照这个方式下载，原因是 ssl 证书问题，我是直接把链接拖到chrome里下载就完事了。在 cmd 下，输入 gnvm version，如有 版本说明 则配置成功。<br>接下来安装/升级 nodejs</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/04/04/Windows-%E4%BD%BF%E7%94%A8-hexo-%E8%B9%9A%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9D%91/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1073,12 +1078,12 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">13</span>
+          <span class="site-state-item-count">14</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-count">18</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>
@@ -1114,12 +1119,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-area"></i>
     </span>
-    <span title="站点总字数">25k</span>
+    <span title="站点总字数">29k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">23 分钟</span>
+    <span title="站点阅读时长">26 分钟</span>
 </div>
 
         

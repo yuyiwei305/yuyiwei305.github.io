@@ -45,5 +45,5 @@ kafka-consumer-perf-test.sh --broker-list $KAFKAS --messages 1000000 --threads 1
 ```
 #image: openjdk:8-slim-buster
 apt-get update && apt-get install -y wget curl net-tools vim procps
-wget https://archive.apache.org/dist/kafka/2.4.1/kafka_2.12-2.4.1.tgz  && tar -xzf kafka_2.12-2.4.1.tgz  kafka
+wget https://archive.apache.org/dist/kafka/2.4.1/kafka_2.12-2.4.1.tgz  && tar -xzf kafka_2.12-2.4.1.tgz 
 ```

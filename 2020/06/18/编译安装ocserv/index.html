@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"visionyu.xyz","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="简单介绍  ocserv 是目前比较常用的vpn软件。这里完整记录下从零开始搭建过程。    名称 值 说明    操作系统 ubuntu 16.04 所用到的基础image   其实没啥需求，直接装就行。这里不废话直接给出命令，搞成脚本一件执行即可。 安装ocsserv123456789101112131415161718192021#依赖的安装apt-get updateapt-get -y">
+<meta property="og:type" content="article">
+<meta property="og:title" content="编译安装ocserv">
+<meta property="og:url" content="https://visionyu.xyz/2020/06/18/%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85ocserv/index.html">
+<meta property="og:site_name" content="VisIonyu 的日常">
+<meta property="og:description" content="简单介绍  ocserv 是目前比较常用的vpn软件。这里完整记录下从零开始搭建过程。    名称 值 说明    操作系统 ubuntu 16.04 所用到的基础image   其实没啥需求，直接装就行。这里不废话直接给出命令，搞成脚本一件执行即可。 安装ocsserv123456789101112131415161718192021#依赖的安装apt-get updateapt-get -y">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-06-18T12:33:06.000Z">
+<meta property="article:modified_time" content="2020-06-18T14:05:47.958Z">
+<meta property="article:author" content="VisIonyu">
+<meta property="article:tag" content="ocserv">
+<meta property="article:tag" content="vpn">
+<meta property="article:tag" content="newwork">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://visionyu.xyz/2020/06/18/%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85ocserv/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>编译安装ocserv | VisIonyu 的日常</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">VisIonyu 的日常</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://visionyu.xyz/2020/06/18/%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85ocserv/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="VisIonyu">
+      <meta itemprop="description" content="日常生活">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="VisIonyu 的日常">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          编译安装ocserv
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-06-18 20:33:06" itemprop="dateCreated datePublished" datetime="2020-06-18T20:33:06+08:00">2020-06-18</time>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="简单介绍"><a href="#简单介绍" class="headerlink" title="简单介绍"></a>简单介绍</h3><p>  ocserv 是目前比较常用的vpn软件。这里完整记录下从零开始搭建过程。</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>操作系统</td>
+<td>ubuntu 16.04</td>
+<td>所用到的基础image</td>
+</tr>
+</tbody></table>
+<p>其实没啥需求，直接装就行。这里不废话直接给出命令，搞成脚本一件执行即可。</p>
+<h3 id="安装ocsserv"><a href="#安装ocsserv" class="headerlink" title="安装ocsserv"></a>安装ocsserv</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">#依赖的安装</span><br><span class="line">apt-get update</span><br><span class="line">apt-get -y  install wget git dh-autoreconf  libgnutls28-dev libev-dev libwrap0-dev  libpam0g-dev  liblz4-dev libseccomp-dev   libreadline-dev libnl-route-3-dev libnl-route-3-dev libkrb5-dev  libradcli-dev libprotobuf-c-dev libtalloc-dev libhttp-parser-dev libpcl1-dev protobuf-c-compiler gperf liblockfile-bin nuttcp lcov libuid-wrapper libpam-wrapper  libnss-wrapper libsocket-wrapper gss-ntlmssp haproxy iputils-ping freeradius gawk yajl-tools</span><br><span class="line"></span><br><span class="line">#下载源代码</span><br><span class="line">git clone https:&#x2F;&#x2F;gitlab.com&#x2F;openconnect&#x2F;ocserv.git</span><br><span class="line"></span><br><span class="line">#编译安装</span><br><span class="line">cd ocserv &amp;&amp; autoreconf -fvi &amp;&amp; .&#x2F;configure &amp;&amp; make</span><br><span class="line">cp src&#x2F;ocserv &#x2F;usr&#x2F;sbin&#x2F;ocserv</span><br><span class="line">cp src&#x2F;ocserv-worker  &#x2F;usr&#x2F;sbin&#x2F;ocserv-worker</span><br><span class="line">cp src&#x2F;ocserv-fw &#x2F;usr&#x2F;bin&#x2F;ocserv-fw</span><br><span class="line">cp src&#x2F;occtl&#x2F;occtl &#x2F;usr&#x2F;bin&#x2F;</span><br><span class="line">cp src&#x2F;ocpasswd&#x2F;ocpasswd &#x2F;usr&#x2F;bin&#x2F;</span><br><span class="line">cp doc&#x2F;systemd&#x2F;standalone&#x2F;ocserv.service  &#x2F;etc&#x2F;systemd&#x2F;system&#x2F;ocserv.service</span><br><span class="line"></span><br><span class="line">#内核参数调优</span><br><span class="line">echo &quot;net.ipv4.ip_forward &#x3D; 1&quot; &gt;&gt; &#x2F;etc&#x2F;sysctl.conf</span><br><span class="line">echo &quot;net.core.default_qdisc &#x3D; fq&quot; &gt;&gt; &#x2F;etc&#x2F;sysctl.conf</span><br><span class="line">echo &quot;net.ipv4.tcp_congestion_control &#x3D; bbr&quot; &gt;&gt; &#x2F;etc&#x2F;sysctl.conf</span><br><span class="line">sysctl -p</span><br></pre></td></tr></table></figure>
+<a id="more"></a>
+
+<h3 id="安装证书"><a href="#安装证书" class="headerlink" title="安装证书"></a>安装证书</h3><p>上述步骤执行完基本的ocserv 已经安装好， 其实如果不编译 直接执行 apt 安装也行</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get update &amp;&amp; apt-get -y install  ocserv</span><br></pre></td></tr></table></figure>
+
+<p>不知道为啥，上面编译执行完之后有的时候会出现dns解析有问题，尤其是高版本ubuntu。所以在执行下面的步骤前，最好检查下dns，或者干脆重启</p>
+<p>之后安装证书 两种方式 二选一,哪种方式好使用哪种，总之要把certbot装上</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"># 1. 第一种</span><br><span class="line">apt-get update</span><br><span class="line">apt-get  -y install software-properties-common</span><br><span class="line">add-apt-repository ppa:certbot&#x2F;certbot -y</span><br><span class="line">apt-get update</span><br><span class="line">apt-get -y install certbot</span><br><span class="line"></span><br><span class="line"># 2.第二种</span><br><span class="line">apt-get update</span><br><span class="line">apt-get -y install certbot</span><br></pre></td></tr></table></figure>
+<p>申请证书</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># 域名是你自己的，提前做好解析</span><br><span class="line">export domain &#x3D; xxx.com</span><br><span class="line">certbot certonly --standalone -n --agree-tos --email xxx@xxx.com  --preferred-challenges http -d $domain</span><br></pre></td></tr></table></figure>
+<p>证书申请成功长这样：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">- Congratulations! Your certificate and chain have been saved at:</span><br><span class="line">  &#x2F;etc&#x2F;letsencrypt&#x2F;live&#x2F;xxx.com&#x2F;fullchain.pem (1)</span><br><span class="line">  Your key file has been saved at:</span><br><span class="line">  &#x2F;etc&#x2F;letsencrypt&#x2F;live&#x2F;xxx.com&#x2F;privkey.pem (2)</span><br><span class="line">  Your cert will expire on 2020-09-14. To obtain a new or tweaked</span><br><span class="line">  version of this certificate in the future, simply run certbot</span><br><span class="line">  again. To non-interactively renew *all* of your certificates, run</span><br><span class="line">  &quot;certbot renew&quot;</span><br><span class="line">- Your account credentials have been saved in your Certbot</span><br><span class="line">  configuration directory at &#x2F;etc&#x2F;letsencrypt. You should make a</span><br><span class="line">  secure backup of this folder now. This configuration directory will</span><br><span class="line">  also contain certificates and private keys obtained by Certbot so</span><br><span class="line">  making regular backups of this folder is ideal.</span><br><span class="line">- If you like Certbot, please consider supporting our work by:</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">(1) (2) 这里是我们一会儿要用到的</span><br></pre></td></tr></table></figure>
+
+<h3 id="配置服务"><a href="#配置服务" class="headerlink" title="配置服务"></a>配置服务</h3><ol>
+<li>修改配置文件<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line"># 下载个网上现成的，具体优化参考官方的 sample 也行，这里就不优化了</span><br><span class="line">wget -N --no-check-certificate -P &quot;&#x2F;etc&#x2F;ocserv&quot; &quot;https:&#x2F;&#x2F;files.zorz.cc&#x2F;ocserv.conf&quot;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">auth &#x3D; &quot;plain[passwd&#x3D;&#x2F;etc&#x2F;ocserv&#x2F;ocpasswd]&quot;</span><br><span class="line"># listen-host &#x3D; [IP|HOSTNAME]</span><br><span class="line">tcp-port &#x3D; 443</span><br><span class="line">#udp-port &#x3D; 443  #最好注释掉（0）</span><br><span class="line">run-as-user &#x3D; nobody</span><br><span class="line">run-as-group &#x3D; daemon</span><br><span class="line">socket-file &#x3D; &#x2F;var&#x2F;run&#x2F;ocserv-socket</span><br><span class="line">server-cert &#x3D; &#x2F;etc&#x2F;letsencrypt&#x2F;live&#x2F;xxx.com&#x2F;fullchain.pem （1）</span><br><span class="line">server-key &#x3D; &#x2F;etc&#x2F;letsencrypt&#x2F;live&#x2F;xxx.com&#x2F;privkey.pem   （2） #刚才写的</span><br><span class="line">ca-cert &#x3D; &#x2F;etc&#x2F;ocserv&#x2F;ssl&#x2F;ca-cert.pem</span><br><span class="line">isolate-workers &#x3D; true</span><br><span class="line">banner &#x3D; &quot;Hello&quot;</span><br><span class="line">max-clients &#x3D; 16</span><br><span class="line">max-same-clients &#x3D; 2</span><br><span class="line">server-stats-reset-time &#x3D; 604800</span><br><span class="line">keepalive &#x3D; 32400</span><br><span class="line">dpd &#x3D; 30</span><br><span class="line">mobile-dpd &#x3D; 90</span><br><span class="line">switch-to-tcp-timeout &#x3D; 25</span><br><span class="line">try-mtu-discovery &#x3D; true</span><br><span class="line">tls-priorities &#x3D; &quot;NORMAL:%SERVER_PRECEDENCE:%COMPAT:-VERS-SSL3.0&quot;</span><br><span class="line">auth-timeout &#x3D; 240</span><br><span class="line">min-reauth-time &#x3D; 300</span><br><span class="line">max-ban-score &#x3D; 80</span><br><span class="line">ban-reset-time &#x3D; 1200</span><br><span class="line">cookie-timeout &#x3D; 300</span><br><span class="line">deny-roaming &#x3D; false</span><br><span class="line">rekey-time &#x3D; 172800</span><br><span class="line">rekey-method &#x3D; ssl</span><br><span class="line">use-occtl &#x3D; true</span><br><span class="line">pid-file &#x3D; &#x2F;var&#x2F;run&#x2F;ocserv.pid</span><br><span class="line">device &#x3D; vpns</span><br><span class="line">predictable-ips &#x3D; true</span><br><span class="line">default-domain &#x3D; xxx.com #(3)</span><br><span class="line"></span><br><span class="line">ipv4-network &#x3D; 192.168.169.0 #(4)</span><br><span class="line">ipv4-netmask &#x3D; 255.255.255.0</span><br><span class="line"># An alternative way of specifying the network:</span><br><span class="line">#ipv4-network &#x3D; 192.168.1.0&#x2F;24</span><br><span class="line"># The IPv6 subnet that leases will be given from.</span><br><span class="line">#ipv6-network &#x3D; fda9:4efe:7e3b:03ea::&#x2F;48</span><br><span class="line"># Specify the size of the network to provide to clients. It is</span><br><span class="line"># generally recommended to provide clients with a &#x2F;64 network in</span><br><span class="line"># IPv6, but any subnet may be specified. To provide clients only</span><br><span class="line"># with a single IP use the prefix 128.</span><br><span class="line">#ipv6-subnet-prefix &#x3D; 128</span><br><span class="line">#ipv6-subnet-prefix &#x3D; 64</span><br><span class="line">tunnel-all-dns &#x3D; true</span><br><span class="line">dns &#x3D; 8.8.8.8</span><br><span class="line">dns &#x3D; 8.8.4.4</span><br><span class="line">ping-leases &#x3D; false</span><br><span class="line"># route &#x3D; 10.10.10.0&#x2F;255.255.255.0</span><br><span class="line"># route &#x3D; 192.168.0.0&#x2F;255.255.0.0</span><br><span class="line"># route &#x3D; fef4:db8:1000:1001::&#x2F;64</span><br><span class="line"># route &#x3D; default</span><br><span class="line"># no-route &#x3D; 192.168.5.0&#x2F;255.255.255.0</span><br><span class="line">cisco-client-compat &#x3D; true</span><br><span class="line">dtls-legacy &#x3D; true</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># 需要改的我已经标注好了</span><br></pre></td></tr></table></figure></li>
+<li>添加用户以及启动</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">iptables -t nat -A POSTROUTING -j MASQUERADE</span><br><span class="line"></span><br><span class="line">systemctl enable ocserv</span><br><span class="line"></span><br><span class="line">ocpasswd -c &#x2F;etc&#x2F;ocserv&#x2F;ocpasswd test</span><br><span class="line"></span><br><span class="line">systemctl start ocserv</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>查看日志</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">journalctl -xe -u ocserv.service</span><br></pre></td></tr></table></figure>
+
+<p>至此服务基本搭建完成</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/ocserv/" rel="tag"># ocserv</a>
+              <a href="/tags/vpn/" rel="tag"># vpn</a>
+              <a href="/tags/newwork/" rel="tag"># newwork</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/05/28/kafka%E9%80%9F%E5%BA%A6%E5%BF%AB%E7%9A%84%E5%8E%9F%E5%9B%A0/" rel="prev" title="kafka速度快的原因">
+      <i class="fa fa-chevron-left"></i> kafka速度快的原因
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#简单介绍"><span class="nav-number">1.</span> <span class="nav-text">简单介绍</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装ocsserv"><span class="nav-number">2.</span> <span class="nav-text">安装ocsserv</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装证书"><span class="nav-number">3.</span> <span class="nav-text">安装证书</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#配置服务"><span class="nav-number">4.</span> <span class="nav-text">配置服务</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">VisIonyu</p>
+  <div class="site-description" itemprop="description">日常生活</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">VisIonyu</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">34k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">31 分钟</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginModelPath":"assets/","model":{"jsonPath":"/live2dw/assets/haru02.model.json"},"display":{"position":"right","width":225,"height":450},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

@@ -147,6 +147,93 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://visionyu.xyz/2020/06/29/dnsmasq-ipset-iptables-%E5%AE%9E%E7%8E%B0%E5%AF%B9%E6%B5%81%E9%87%8F%E8%BF%9B%E8%A1%8C%E5%88%86%E6%B5%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="VisIonyu">
+      <meta itemprop="description" content="日常生活">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="VisIonyu 的日常">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/06/29/dnsmasq-ipset-iptables-%E5%AE%9E%E7%8E%B0%E5%AF%B9%E6%B5%81%E9%87%8F%E8%BF%9B%E8%A1%8C%E5%88%86%E6%B5%81/" class="post-title-link" itemprop="url">dnsmasq ipset iptables 实现对流量进行分流</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-06-29 20:45:48" itemprop="dateCreated datePublished" datetime="2020-06-29T20:45:48+08:00">2020-06-29</time>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>1.7k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="需求和实现方式"><a href="#需求和实现方式" class="headerlink" title="需求和实现方式"></a>需求和实现方式</h3><p>  使用vpn相比代理方式的确会稳定，但是常常会导致客户端网络改变而造成一些问题，所以我们更希望同时具有vpn的稳定以及基于不同网络访问请求而走不同流量的策略。我们可以通<br>过 dnsmasq+ipset区分出不同域名的不同ip，并且对ip进行分组，然后使用iptable 对不同组的ip打上不同的标签，最后再走不同的路由表实现策略路由。 基本的流程图如下:</p>
+<pre class="mermaid">graph LR
+    正常流量 --> dnsmasq --> ipset --> iptables --> iproute --> 流量转发</pre>
+
+
+<h3 id="配置流程"><a href="#配置流程" class="headerlink" title="配置流程"></a>配置流程</h3><ol>
+<li><p>创建 ipset</p>
+<p>这里创建两个：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">#安装</span><br><span class="line">apt-get update &amp;&amp; apt-get install -y ipset</span><br><span class="line"></span><br><span class="line">#配置（使用这个即可 下面的都是一些常用命令）</span><br><span class="line">ipset create gfwlist2 hash:ip</span><br><span class="line">ipset create gfwlist3 hash:ip</span><br><span class="line"></span><br><span class="line">#可以通过以下命令查看</span><br><span class="line">ipset list</span><br><span class="line"></span><br><span class="line"># 保存</span><br><span class="line">ipset save | tee &#x2F;etc&#x2F;ipset.conf</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/06/29/dnsmasq-ipset-iptables-%E5%AE%9E%E7%8E%B0%E5%AF%B9%E6%B5%81%E9%87%8F%E8%BF%9B%E8%A1%8C%E5%88%86%E6%B5%81/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://visionyu.xyz/2020/06/19/kafka-lag-%E7%9B%91%E6%8E%A7%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88-kafka-lag-exporter-prometheus-grafana/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -951,88 +1038,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://visionyu.xyz/2020/04/10/%E5%88%A9%E7%94%A8AWS-EventBridge-%E5%AE%9E%E7%8E%B0%E6%95%85%E9%9A%9C%E8%87%AA%E6%84%88/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="VisIonyu">
-      <meta itemprop="description" content="日常生活">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="VisIonyu 的日常">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/04/10/%E5%88%A9%E7%94%A8AWS-EventBridge-%E5%AE%9E%E7%8E%B0%E6%95%85%E9%9A%9C%E8%87%AA%E6%84%88/" class="post-title-link" itemprop="url">利用AWS EventBridge 实现故障自愈</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-04-10 15:04:58" itemprop="dateCreated datePublished" datetime="2020-04-10T15:04:58+08:00">2020-04-10</time>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>760</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>1 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>公司在aws ec2 有一些陈年老业务，这些业务比较臃肿不太方便加入到新的k8s集群，我们也没有太多精力去迁移过去。但是时不时来个僵死触发报警也是很难受。毕竟谁都不想半夜爬起来搞这个…<br>在此契机下研究了下故障自愈的一些事情。 发现市面上这块呼声最大的其实是蓝鲸平台，但它比较大而全,并不适合小体量公司，而大体量公司还不如自己搞。由于我们所有的业务基本都在aws上所以更倾向于采用aws自己的一些方案。<br>经过调研发现 cloudwatch + EventBridge 可以比较好的处理当前我们的一些问题。</p>
-<h3 id="当前的告警机制"><a href="#当前的告警机制" class="headerlink" title="当前的告警机制"></a>当前的告警机制</h3><p>首先看一下当前我们的告警以及处理方式，当实例异常通过cloudwatch进行告警，收到电话☎️或者邮件后，人工开始处理。<br>由于是处理通常是机械性的重启，而且经常发生在半夜，所以我们希望加入自动化手段处理这些告警。</p>
-<pre class="mermaid">graph LR
-    Ec2 --> Cloudwatch --> 电话,邮件,钉钉 --> 人工处理</pre>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/04/10/%E5%88%A9%E7%94%A8AWS-EventBridge-%E5%AE%9E%E7%8E%B0%E6%95%85%E9%9A%9C%E8%87%AA%E6%84%88/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1102,12 +1107,12 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">16</span>
+          <span class="site-state-item-count">17</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-count">24</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>
@@ -1143,12 +1148,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-area"></i>
     </span>
-    <span title="站点总字数">36k</span>
+    <span title="站点总字数">37k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">32 分钟</span>
+    <span title="站点阅读时长">34 分钟</span>
 </div>
 
         

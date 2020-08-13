@@ -147,6 +147,109 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://visionyu.xyz/2020/08/13/kafka%E6%B7%BB%E5%8A%A0broker%E9%87%8D%E6%96%B0%E5%88%86%E9%85%8Dpartition/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="VisIonyu">
+      <meta itemprop="description" content="日常生活">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="VisIonyu 的日常">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/08/13/kafka%E6%B7%BB%E5%8A%A0broker%E9%87%8D%E6%96%B0%E5%88%86%E9%85%8Dpartition/" class="post-title-link" itemprop="url">kafka添加broker重新分配partition</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-08-13 17:25:07" itemprop="dateCreated datePublished" datetime="2020-08-13T17:25:07+08:00">2020-08-13</time>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>1.5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>当kafka添加broker时，我们需要重新分配partition，使其流量平衡，这里整理出相关的命令以供日常使用。<br>说明： 这里以topic test和test1为例。</p>
+<ol start="0">
+<li><p>前提变量</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">export ZOOKEEPERS&#x3D;zookeeper:2181 #自己根据需要改,新版本基本上用不到这个</span><br><span class="line">export KAFKAS&#x3D;kafka:9092 #自己根据需要改</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>修改topic的partitions</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">.&#x2F;kafka-topics.sh --zookeeper $ZOOKEEPERS --alter --topic test --partitions 6</span><br><span class="line">.&#x2F;kafka-topics.sh --zookeeper $ZOOKEEPERS --alter --topic test1 --partitions 6</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>数据迁移–生成迁移计划json文件</p>
+<p>手动生成一个json文件topic.json</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"> &#123;</span><br><span class="line">   &quot;topics&quot;: [</span><br><span class="line">      &#123;&quot;topic&quot;: &quot;test&quot;&#125;,</span><br><span class="line">      &#123;&quot;topic&quot;: &quot;test1&quot;&#125;</span><br><span class="line">  ],</span><br><span class="line">  &quot;version&quot;: 1</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用 –generate生成迁移计划，将test和test1的partition均匀扩充到所有机器上</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.&#x2F;kafka-reassign-partitions.sh  --zookeeper $ZOOKEEPERS --topics-to-move-json-file topic.json  --broker-list  &quot;1,2,3,4,5,6&quot; --generate</span><br></pre></td></tr></table></figure>
+
+<p>生成的结果类似于这样:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">Current partition replica assignment</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">  &quot;version&quot;:1,</span><br><span class="line">  &quot;partitions&quot;:[.....]</span><br><span class="line">&#125;</span><br><span class="line">Proposed partition reassignment configuration</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">  &quot;version&quot;:1,</span><br><span class="line">  &quot;partitions&quot;:[.....]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们将 “Proposed partition reassignment configuration” 后面的json复制下来生成reassignment.json 这个文件</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#reassignment.json</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">  &quot;version&quot;:1,</span><br><span class="line">  &quot;partitions&quot;:[.....]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>数据迁移–执行扩容</p>
+<p>利用上一步生成的reassignment.json执行扩容命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.&#x2F;kafka-reassign-partitions.sh --zookeeper $ZOOKEEPERS --reassignment-json-file reassignment.json --execute</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>验证结果</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.&#x2F;kafka-reassign-partitions.sh --zookeeper $ZOOKEEPERS --reassignment-json-file reassignment.json --verify</span><br></pre></td></tr></table></figure>
+
+<p>大概长这个样子:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"></span><br><span class="line">Reassignment of partition test-x completed successfully</span><br><span class="line">Reassignment of partition test1-x completed successfully</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://visionyu.xyz/2020/07/08/%E8%A7%A3%E5%86%B3-WordPress-%E5%9C%A8%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86%E5%90%8E%E9%9D%A2%E4%B8%8D%E8%87%AA%E5%8A%A8-https-%E7%9A%84%E9%97%AE%E9%A2%98/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -180,7 +283,7 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>385</span>
+              <span>601</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
@@ -199,7 +302,11 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>WordPress 官方默认 Docker 是基于 Apache 来做的，但为了自动加上 SSL，我用了一个 Nginx 容器来做反向代理。于是问题出现了：用 HTTPS 访问 Nginx，生成出来的网页里面所有生成的 URL 都是 HTTP，而不是 HTTPS。<br>解决办法：在 wp-config.php 里面加上：</p>
+          <p>WordPress 官方默认 Docker 是基于 Apache 来做的，但为了自动加上 SSL，我用了一个 Nginx 容器来做反向代理。于是问题出现了：用 HTTPS 访问 Nginx，生成出来的网页里面所有生成的 URL 都是 HTTP，而不是 HTTPS。</p>
+<p>1.修改数据库地址http改为https:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">UPDATE wp_options SET option_value &#x3D; replace(option_value, &#39;http:&#x2F;&#x2F;xxx.com, &#39;https:&#x2F;&#x2F;xxx.com&#39;) WHERE option_name &#x3D; &#39;home&#39; OR option_name &#x3D; &#39;siteurl&#39;;</span><br></pre></td></tr></table></figure>
+
+<p>2.在 wp-config.php 里面加上：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">if((!empty( $_SERVER[&#39;HTTP_X_FORWARDED_HOST&#39;])) || (!empty( $_SERVER[&#39;HTTP_X_FORWARDED_FOR&#39;])) ) &#123;</span><br><span class="line">    $_SERVER[&#39;HTTP_HOST&#39;] &#x3D; $_SERVER[&#39;HTTP_X_FORWARDED_HOST&#39;];</span><br><span class="line">    $_SERVER[&#39;HTTPS&#39;] &#x3D; &#39;on&#39;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
       
@@ -932,105 +1039,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://visionyu.xyz/2020/04/16/logstash-%E6%B7%BB%E5%8A%A0-stomp-output-plugin/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="VisIonyu">
-      <meta itemprop="description" content="日常生活">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="VisIonyu 的日常">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/04/16/logstash-%E6%B7%BB%E5%8A%A0-stomp-output-plugin/" class="post-title-link" itemprop="url">logstash 添加 stomp output plugin</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-04-16 14:59:41" itemprop="dateCreated datePublished" datetime="2020-04-16T14:59:41+08:00">2020-04-16</time>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>1.6k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>1 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>最近由于工作需要，要将logstash采集到的数据，经过过滤发送到mq中，直接用默认的logstash镜像并不能支持。查了下资料，发现有相关的插件，可以支持。在此记录一下。</p>
-<h3 id="准备阶段"><a href="#准备阶段" class="headerlink" title="准备阶段"></a>准备阶段</h3><p>logstash 部署在k8s集群中，之前我们已经通过helm完整的封装，在此我们只需要对于原始镜像去做修改，让它支持stomp output即可。</p>
-<table>
-<thead>
-<tr>
-<th>名称</th>
-<th>地址</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>logstash基础镜像</td>
-<td>docker.elastic.co/logstash/logstash-oss:7.5.1</td>
-<td>所用到的基础image</td>
-</tr>
-<tr>
-<td>logstash-output-stomp</td>
-<td>github.com/kfogle/logstash-output-stomp.git</td>
-<td>stomp 插件，这里用了个网友修改过的，原因是官方插件对https支持不够好</td>
-</tr>
-</tbody></table>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/04/16/logstash-%E6%B7%BB%E5%8A%A0-stomp-output-plugin/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1100,7 +1108,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">18</span>
+          <span class="site-state-item-count">19</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1141,12 +1149,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-area"></i>
     </span>
-    <span title="站点总字数">38k</span>
+    <span title="站点总字数">39k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">34 分钟</span>
+    <span title="站点阅读时长">36 分钟</span>
 </div>
 
         

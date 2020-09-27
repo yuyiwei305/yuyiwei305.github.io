@@ -1,5 +1,5 @@
 ---
-title: 记录nginx更换淘宝tengine实现动态域名解析以及长连接解决方案
+title: nginx更换 Docker + tengine + lua 实现动态域名解析以及长连接解决方案
 date: 2020-05-14 17:52:39
 tags: [nginx,tengine,keepalive,dns]
 ---
@@ -10,7 +10,7 @@ tags: [nginx,tengine,keepalive,dns]
 所以针对这个问题去做一些性能优化。
 优化项如下：
 
-1. 更换基础nginx镜像为淘宝tengine镜像 --- tengine 支持upstream同时还支持域名动态解析，具体模块为： ngx_http_upstream_keepalive_module，ngx_http_upstream_dynamic_module。由于没有官方提供的tengine docker镜像 需要自己编译打包。
+1. 更换基础nginx镜像为淘宝tengine镜像 --- tengine 支持upstream同时还支持域名动态解析，同时编译支持lua,具体模块为： ngx_http_upstream_keepalive_module，ngx_http_upstream_dynamic_module。由于没有官方提供的tengine docker镜像 需要自己编译打包。
 2. 修改pod dns选项优化查询域。
 3. 配置文件参数调优,主要针对 https，以及websocket。
 
@@ -55,8 +55,14 @@ ENV CONFIG "\
         --with-http_xslt_module \
         --with-http_flv_module \
         --with-http_mp4_module \
+        --with-http_secure_link_module \
+        --with-mail_ssl_module \
+        --with-stream \
+        --add-module=modules/ngx_http_lua_module \
         --with-http_degradation_module \
         --add-module=modules/ngx_http_upstream_dynamic_module \
+        --add-module=modules/ngx_http_upstream_session_sticky_module \
+
         "
 
 RUN set -x \
@@ -65,6 +71,7 @@ RUN set -x \
     && apt-get update \
     && apt-get -y install \
        gcc \
+       wget \
        libxslt-dev \
        libxml2-dev \
        libc-dev \
@@ -91,9 +98,19 @@ RUN set -x \
     && tar -zxC /usr/src -f tengine.tar.gz \
     && rm tengine.tar.gz \
     && cd /usr/src/tengine-$TENGINE_VERSION \
+    && curl -L "https://github.com/openresty/luajit2/archive/v2.1-20200102.tar.gz" -o v2.1-20200102.tar.gz \
+    && tar -zxC /usr/src/tengine-$TENGINE_VERSION -f v2.1-20200102.tar.gz \
+    && rm v2.1-20200102.tar.gz \
+    && cd luajit2-2.1-20200102 && make && make install PREFIX=/usr/local/luajit \
+    && export LUAJIT_LIB=/usr/local/luajit/lib  \
+    && export LUAJIT_INC=/usr/local/luajit/include/luajit-2.1 \
+    && echo '/usr/local/luajit/lib'>>/etc/ld.so.conf.d/usr_local_luajit_lib.conf \
+    && ldconfig \
+    && cd .. \
     && ./configure $CONFIG \
     && make \
     && make install \
+    && ln -s /usr/local/lib/libluajit-5.1.so.2 /lib64/libluajit-5.1.so.2 \
     && rm -rf /etc/nginx/html/ \
     && mkdir /etc/nginx/conf.d/ \
     && mkdir -p /usr/share/nginx/html/  \
@@ -106,11 +123,11 @@ RUN set -x \
     && ln -sf /dev/stderr /var/log/nginx/error.log
 
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]
+
 
 ```
 

@@ -30,8 +30,12 @@ kafka-console-consumer.sh --bootstrap-server $KAFKAS --topic test
 kafka-console-producer.sh --broker-list $KAFKAS  --topic test
 ```
 
+5. 修改topic配置
+```
+kafka-configs.sh --zookeeper $ZOOKEEPERS --entity-type topics --entity-name test   --alter --add-config compression.type=producer retention.ms=86400000
+```
 
-5. 压力测试
+6. 压力测试
 ```
 #生产者
 kafka-run-class.sh org.apache.kafka.tools.ProducerPerformance --print-metrics --topic test --num-records 6000000 --throughput 100000 --record-size 100 --producer-props bootstrap.servers=$KAFKAS buffer.memory=67108864 batch.size=32768 linger.ms=20 acks=1
@@ -45,5 +49,5 @@ kafka-consumer-perf-test.sh --broker-list $KAFKAS --messages 1000000 --threads 1
 ```
 #image: openjdk:8-slim-buster
 apt-get update && apt-get install -y wget curl net-tools vim procps
-wget https://archive.apache.org/dist/kafka/2.4.1/kafka_2.12-2.4.1.tgz  && tar -xzf kafka_2.12-2.4.1.tgz 
+wget https://archive.apache.org/dist/kafka/2.4.1/kafka_2.12-2.4.1.tgz  && tar -xzf kafka_2.12-2.4.1.tgz
 ```

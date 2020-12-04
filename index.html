@@ -147,6 +147,176 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://visionyu.xyz/2020/10/20/%E4%BD%BF%E7%94%A8Debezium%E5%90%8C%E6%AD%A5mysql%E6%95%B0%E6%8D%AE%E5%88%B0kafaka/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="VisIonyu">
+      <meta itemprop="description" content="日常生活">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="VisIonyu 的日常">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/10/20/%E4%BD%BF%E7%94%A8Debezium%E5%90%8C%E6%AD%A5mysql%E6%95%B0%E6%8D%AE%E5%88%B0kafaka/" class="post-title-link" itemprop="url">使用Debezium同步mysql数据到kafaka</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-20 20:13:57" itemprop="dateCreated datePublished" datetime="2020-10-20T20:13:57+08:00">2020-10-20</time>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>9.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>9 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="目标"><a href="#目标" class="headerlink" title="目标"></a>目标</h3><p>目前已有mysql和kafka，需要利用Debezium将mysql的数据同步到kafka持久化保存，之后再通过jdbc sink导出kafka中的数据至其他mysql</p>
+<p>Debezium是一个分布式平台，它可以将你现有的数据库变成事件流，因此应用程序可以看到并立即响应数据库中的每个行级变化。</p>
+<p>Debezium建立在Apache Kafka之上，并提供Kafka Connect兼容的连接器，可以监控特定的数据库管理系统。Debezium在Kafka日志中记录数据变化的历史，从你的应用程序消费它们的地方。这使得您的应用程序可以轻松地正确和完整地消费所有的事件。即使你的应用程序意外停止，它也不会错过任何东西：当应用程序重新启动时，它将继续消耗它离开的事件。</p>
+<h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><p>开始前需要准备好需要的资源</p>
+<ol>
+<li>kafka  集群 （这里使用的是aws msk）</li>
+<li>MYSQL 集群</li>
+<li>kafka以及mysql的客户端命令行工具</li>
+<li>kafka connect</li>
+</ol>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/10/20/%E4%BD%BF%E7%94%A8Debezium%E5%90%8C%E6%AD%A5mysql%E6%95%B0%E6%8D%AE%E5%88%B0kafaka/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://visionyu.xyz/2020/09/27/tengine-%E7%BC%96%E8%AF%91%E5%B8%B8%E7%94%A8%E7%9A%84%E4%B8%80%E4%BA%9B%E5%8C%85%E6%B1%87%E6%80%BB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="VisIonyu">
+      <meta itemprop="description" content="日常生活">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="VisIonyu 的日常">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/09/27/tengine-%E7%BC%96%E8%AF%91%E5%B8%B8%E7%94%A8%E7%9A%84%E4%B8%80%E4%BA%9B%E5%8C%85%E6%B1%87%E6%80%BB/" class="post-title-link" itemprop="url">tengine 编译常用的一些包汇总</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-09-27 21:00:52" itemprop="dateCreated datePublished" datetime="2020-09-27T21:00:52+08:00">2020-09-27</time>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="说明"><a href="#说明" class="headerlink" title="说明"></a>说明</h3><p>tengine 配合lua性能没话说,但有时候会遇到很多包和库需要自己编译下载，这里列出常用的以备不时之需。</p>
+<p>1、官方源码包<br>wget <a href="http://tengine.taobao.org/download/tengine-2.3.0.tar.gz">http://tengine.taobao.org/download/tengine-2.3.0.tar.gz</a></p>
+<p>2、基础依赖库<br><a href="http://luajit.org/download/LuaJIT-2.0.5.tar.gz">http://luajit.org/download/LuaJIT-2.0.5.tar.gz</a><br><a href="https://www.openssl.org/source/openssl-1.0.2q.tar.gz">https://www.openssl.org/source/openssl-1.0.2q.tar.gz</a><br><a href="https://github.com/maxmind/geoip-api-c/releases/download/v1.6.12/GeoIP-1.6.12.tar.gz">https://github.com/maxmind/geoip-api-c/releases/download/v1.6.12/GeoIP-1.6.12.tar.gz</a><br><a href="https://sourceforge.net/projects/pcre/files/pcre/8.42/pcre-8.42.tar.gz">https://sourceforge.net/projects/pcre/files/pcre/8.42/pcre-8.42.tar.gz</a><br><a href="https://github.com/openresty/lua-cjson/archive/2.1.0.6.tar.gz">https://github.com/openresty/lua-cjson/archive/2.1.0.6.tar.gz</a><br><a href="https://github.com/libgd/libgd/releases/download/gd-2.2.5/libgd-2.2.5.tar.gz">https://github.com/libgd/libgd/releases/download/gd-2.2.5/libgd-2.2.5.tar.gz</a><br><a href="https://github.com/yaoweibin/nginx_tcp_proxy_module/archive/v0.4.5.zip">https://github.com/yaoweibin/nginx_tcp_proxy_module/archive/v0.4.5.zip</a></p>
+<p>3、第三方模块<br>1）需静态编译的C模块<br><a href="https://github.com/simplresty/ngx_devel_kit/archive/v0.3.0.tar.gz">https://github.com/simplresty/ngx_devel_kit/archive/v0.3.0.tar.gz</a><br><a href="https://github.com/openresty/array-var-nginx-module/archive/v0.05.tar.gz">https://github.com/openresty/array-var-nginx-module/archive/v0.05.tar.gz</a><br><a href="https://github.com/calio/form-input-nginx-module/archive/v0.12.tar.gz">https://github.com/calio/form-input-nginx-module/archive/v0.12.tar.gz</a><br><a href="https://github.com/openresty/encrypted-session-nginx-module/archive/v0.08.tar.gz">https://github.com/openresty/encrypted-session-nginx-module/archive/v0.08.tar.gz</a><br><a href="https://github.com/calio/iconv-nginx-module/archive/v0.14.tar.gz">https://github.com/calio/iconv-nginx-module/archive/v0.14.tar.gz</a><br><a href="https://github.com/openresty/lua-nginx-module/archive/v0.10.13.tar.gz">https://github.com/openresty/lua-nginx-module/archive/v0.10.13.tar.gz</a><br><a href="https://github.com/openresty/set-misc-nginx-module/archive/v0.32.tar.gz">https://github.com/openresty/set-misc-nginx-module/archive/v0.32.tar.gz</a></p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/09/27/tengine-%E7%BC%96%E8%AF%91%E5%B8%B8%E7%94%A8%E7%9A%84%E4%B8%80%E4%BA%9B%E5%8C%85%E6%B1%87%E6%80%BB/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://visionyu.xyz/2020/08/13/kafka%E6%B7%BB%E5%8A%A0broker%E9%87%8D%E6%96%B0%E5%88%86%E9%85%8Dpartition/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -721,7 +891,7 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>1k</span>
+              <span>1.2k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
@@ -753,12 +923,12 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kafka-console-consumer.sh --bootstrap-server $KAFKAS --topic test</span><br></pre></td></tr></table></figure></li>
 <li><p>生产者向topic发送消息</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kafka-console-producer.sh --broker-list $KAFKAS  --topic test</span><br></pre></td></tr></table></figure>
-
-
 </li>
-</ol>
-<ol start="5">
-<li>压力测试<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#生产者</span><br><span class="line">kafka-run-class.sh org.apache.kafka.tools.ProducerPerformance --print-metrics --topic test --num-records 6000000 --throughput 100000 --record-size 100 --producer-props bootstrap.servers&#x3D;$KAFKAS buffer.memory&#x3D;67108864 batch.size&#x3D;32768 linger.ms&#x3D;20 acks&#x3D;1</span><br><span class="line"></span><br><span class="line">#消费者</span><br><span class="line">kafka-consumer-perf-test.sh --broker-list $KAFKAS --messages 1000000 --threads 1 --topic test --print-metrics</span><br></pre></td></tr></table></figure>
+<li><p>修改topic配置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kafka-configs.sh --zookeeper $ZOOKEEPERS --entity-type topics --entity-name test   --alter --add-config compression.type&#x3D;producer retention.ms&#x3D;86400000</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>压力测试</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#生产者</span><br><span class="line">kafka-run-class.sh org.apache.kafka.tools.ProducerPerformance --print-metrics --topic test --num-records 6000000 --throughput 100000 --record-size 100 --producer-props bootstrap.servers&#x3D;$KAFKAS buffer.memory&#x3D;67108864 batch.size&#x3D;32768 linger.ms&#x3D;20 acks&#x3D;1</span><br><span class="line"></span><br><span class="line">#消费者</span><br><span class="line">kafka-consumer-perf-test.sh --broker-list $KAFKAS --messages 1000000 --threads 1 --topic test --print-metrics</span><br></pre></td></tr></table></figure>
 
 
 </li>
@@ -865,184 +1035,10 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://visionyu.xyz/2020/05/14/%E8%AE%B0%E5%BD%95nginx%E6%9B%B4%E6%8D%A2%E6%B7%98%E5%AE%9Dtengine%E5%AE%9E%E7%8E%B0%E5%8A%A8%E6%80%81%E5%9F%9F%E5%90%8D%E8%A7%A3%E6%9E%90%E4%BB%A5%E5%8F%8A%E9%95%BF%E8%BF%9E%E6%8E%A5%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="VisIonyu">
-      <meta itemprop="description" content="日常生活">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="VisIonyu 的日常">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/05/14/%E8%AE%B0%E5%BD%95nginx%E6%9B%B4%E6%8D%A2%E6%B7%98%E5%AE%9Dtengine%E5%AE%9E%E7%8E%B0%E5%8A%A8%E6%80%81%E5%9F%9F%E5%90%8D%E8%A7%A3%E6%9E%90%E4%BB%A5%E5%8F%8A%E9%95%BF%E8%BF%9E%E6%8E%A5%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" class="post-title-link" itemprop="url">记录nginx更换淘宝tengine实现动态域名解析以及长连接解决方案</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-05-14 17:52:39" itemprop="dateCreated datePublished" datetime="2020-05-14T17:52:39+08:00">2020-05-14</time>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>6.1k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>6 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h3 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h3><p>目前公司很多服务会通过nginx调用到外部服务，业务量起来的时候，通过查看上游日志，可以看到有大量的连接产生，随着连接数增加会给服务器带来巨大压力。<br>所以针对这个问题去做一些性能优化。<br>优化项如下：</p>
-<ol>
-<li>更换基础nginx镜像为淘宝tengine镜像 — tengine 支持upstream同时还支持域名动态解析，具体模块为： ngx_http_upstream_keepalive_module，ngx_http_upstream_dynamic_module。由于没有官方提供的tengine docker镜像 需要自己编译打包。</li>
-<li>修改pod dns选项优化查询域。</li>
-<li>配置文件参数调优,主要针对 https，以及websocket。</li>
-</ol>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/05/14/%E8%AE%B0%E5%BD%95nginx%E6%9B%B4%E6%8D%A2%E6%B7%98%E5%AE%9Dtengine%E5%AE%9E%E7%8E%B0%E5%8A%A8%E6%80%81%E5%9F%9F%E5%90%8D%E8%A7%A3%E6%9E%90%E4%BB%A5%E5%8F%8A%E9%95%BF%E8%BF%9E%E6%8E%A5%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://visionyu.xyz/2020/04/22/nginx%E8%AF%86%E5%88%AB%E7%9C%9F%E5%AE%9E%E5%AE%A2%E6%88%B7%E7%AB%AFip%E5%B9%B6%E9%99%90%E9%80%9F%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="VisIonyu">
-      <meta itemprop="description" content="日常生活">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="VisIonyu 的日常">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/04/22/nginx%E8%AF%86%E5%88%AB%E7%9C%9F%E5%AE%9E%E5%AE%A2%E6%88%B7%E7%AB%AFip%E5%B9%B6%E9%99%90%E9%80%9F%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" class="post-title-link" itemprop="url">nginx识别真实客户端ip并限速解决方案</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-04-22 14:14:48" itemprop="dateCreated datePublished" datetime="2020-04-22T14:14:48+08:00">2020-04-22</time>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>2.7k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>2 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>最近公司某些接口经常遭到cc攻击，暂时可以通过配置nginx来缓解这个问题，在这里记录下处理的思路和流程。</p>
-<p>整个环节分为两个步骤，首先识别出真正的客户端ip地址，然后针对这些地址去做访问速率限制，禁止频繁请求，在这里我们使用ngx_http_limit_req_module和ngx_http_limit_conn_module 来限制资源请求。</p>
-<h3 id="识别客户端地址"><a href="#识别客户端地址" class="headerlink" title="识别客户端地址"></a>识别客户端地址</h3><p>由于大量使用了cdn以及经过了层层代理，直接使用nginx的$remote_addr无法得到真正的客户端ip，显示的大概率是上层代理的ip。所以在这里我们使用了http_realip_module这个模块来解决这个问题。</p>
-<p>http_realip_module 由三个部分组成：</p>
-<p>1、set_real_ip_from 是指接受从哪个信任前代理处获得真实用户ip</p>
-<p>2、real_ip_header 是指从接收到报文的哪个http首部去获取前代理传送的用户ip</p>
-<p>3、real_ip_recursive 是否递归地排除直至得到用户ip（默认为off） </p>
-<p>首先，real_ip_header 指定一个http首部名称，默认是X-Real-Ip，假设用默认值的话，nginx在接收到报文后，会查看http首部X-Real-Ip。</p>
-<p>（1）如果有1个IP，它会去核对，发送方的ip是否在set_real_ip_from指定的信任ip列表中。如果是被信任的，它会去认为这个X-Real-Ip中的IP值是前代理告诉自己的，用户的真实IP值，于是，它会将该值赋值给自身的$remote_addr变量；如果不被信任，那么将不作处理，那么$remote_addr还是发送方的ip地址。</p>
-<p>（2）如果X-Real-Ip有多个IP值，比如前一方代理是这么设置的：proxy_set_header X-Real-Ip $proxy_add_x_forwarded_for;</p>
-<p>得到的是一串IP，那么此时real_ip_recursive 的值就至关重要了。nginx将会从ip列表的右到左，去比较set_real_ip_from 的信任列表中的ip。如果real_ip_recursive为off，那么，当最右边一个IP，发现是信任IP，即认为下一个IP（右边第二个）就是用户的真正IP；如果real_ip_recursive为on，那么将从右到左依次比较，知道找到一个不是信任IP为止。然后同样把IP值复制给$remote_addr。</p>
-<p>了解了这个原理接下来就比较好操作了。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/04/22/nginx%E8%AF%86%E5%88%AB%E7%9C%9F%E5%AE%9E%E5%AE%A2%E6%88%B7%E7%AB%AFip%E5%B9%B6%E9%99%90%E9%80%9F%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1108,12 +1104,12 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">19</span>
+          <span class="site-state-item-count">21</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">24</span>
+        <span class="site-state-item-count">26</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>
@@ -1149,12 +1145,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-area"></i>
     </span>
-    <span title="站点总字数">39k</span>
+    <span title="站点总字数">54k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">36 分钟</span>
+    <span title="站点阅读时长">49 分钟</span>
 </div>
 
         

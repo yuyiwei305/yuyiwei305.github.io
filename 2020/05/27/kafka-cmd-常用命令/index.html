@@ -28,7 +28,7 @@
 <meta property="og:description" content="整理了一些，以供自己日常使用：  前提变量 12export ZOOKEEPERS&#x3D;zookeeper:2181 #自己根据需要改,新版本基本上用不到这个export KAFKAS&#x3D;kafka:9092 #自己根据需要改  列出所有Topic: 1kafka-topics.sh  --describe --bootstrap-server $KAFKAS 创建一个topic 1">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2020-05-27T12:41:10.000Z">
-<meta property="article:modified_time" content="2020-06-02T06:25:27.662Z">
+<meta property="article:modified_time" content="2020-10-24T13:49:33.976Z">
 <meta property="article:author" content="VisIonyu">
 <meta name="twitter:card" content="summary">
 
@@ -182,7 +182,7 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>1k</span>
+              <span>1.2k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
@@ -214,12 +214,12 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kafka-console-consumer.sh --bootstrap-server $KAFKAS --topic test</span><br></pre></td></tr></table></figure></li>
 <li><p>生产者向topic发送消息</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kafka-console-producer.sh --broker-list $KAFKAS  --topic test</span><br></pre></td></tr></table></figure>
-
-
 </li>
-</ol>
-<ol start="5">
-<li>压力测试<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#生产者</span><br><span class="line">kafka-run-class.sh org.apache.kafka.tools.ProducerPerformance --print-metrics --topic test --num-records 6000000 --throughput 100000 --record-size 100 --producer-props bootstrap.servers&#x3D;$KAFKAS buffer.memory&#x3D;67108864 batch.size&#x3D;32768 linger.ms&#x3D;20 acks&#x3D;1</span><br><span class="line"></span><br><span class="line">#消费者</span><br><span class="line">kafka-consumer-perf-test.sh --broker-list $KAFKAS --messages 1000000 --threads 1 --topic test --print-metrics</span><br></pre></td></tr></table></figure>
+<li><p>修改topic配置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kafka-configs.sh --zookeeper $ZOOKEEPERS --entity-type topics --entity-name test   --alter --add-config compression.type&#x3D;producer retention.ms&#x3D;86400000</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>压力测试</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#生产者</span><br><span class="line">kafka-run-class.sh org.apache.kafka.tools.ProducerPerformance --print-metrics --topic test --num-records 6000000 --throughput 100000 --record-size 100 --producer-props bootstrap.servers&#x3D;$KAFKAS buffer.memory&#x3D;67108864 batch.size&#x3D;32768 linger.ms&#x3D;20 acks&#x3D;1</span><br><span class="line"></span><br><span class="line">#消费者</span><br><span class="line">kafka-consumer-perf-test.sh --broker-list $KAFKAS --messages 1000000 --threads 1 --topic test --print-metrics</span><br></pre></td></tr></table></figure>
 
 
 </li>
@@ -321,12 +321,12 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">19</span>
+          <span class="site-state-item-count">21</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">24</span>
+        <span class="site-state-item-count">26</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>
@@ -362,12 +362,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-area"></i>
     </span>
-    <span title="站点总字数">39k</span>
+    <span title="站点总字数">54k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">36 分钟</span>
+    <span title="站点阅读时长">49 分钟</span>
 </div>
 
         

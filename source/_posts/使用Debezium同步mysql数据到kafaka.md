@@ -29,7 +29,7 @@ Debezium 使用容器启动，官方会提供docker镜像，这里使用最新�
 
 ```
 BOOTSTRAP_SERVERS: $KAFKAS
-CONFIG_STORAGE_TOPIC:	trade_source_configs
+CONFIG_STORAGE_TOPIC:	source_configs
 CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY:		All	 	
 CONNECT_MAX_REQUEST_SIZE:		10485760	 	
 CONNECT_PRODUCER_BUFFER_MEMORY:		45554432	 	
@@ -38,8 +38,8 @@ GROUP_ID:		1
 HEAP_OPTS:		-Xmx4G -Xms4G	 	
 OFFSET_FLUSH_INTERVAL_MS:		10000	 	
 OFFSET_FLUSH_TIMEOUT_MS:		60000	 	
-OFFSET_STORAGE_TOPIC:		trade_source_offsets	 	
-STATUS_STORAGE_TOPIC:		trade_source_statuses
+OFFSET_STORAGE_TOPIC:		source_offsets	 	
+STATUS_STORAGE_TOPIC:		source_statuses
 
 ```
 启动完成之后 进入cmd 命令行确认 connect 运行情况，这里将启动之后的容器通k8s service 暴露出来，服务名为 kafka-connect-base.kafka-connect
@@ -61,43 +61,40 @@ curl -X DELETE -H "Accept:application/json" http://kafka-connect-base.kafka-conn
 ### 源同步配置
 ```
 {
-  "name": "source-connector-datetest",  
+  "name": "source-test",  
   "config": {  
     "connector.class": "io.debezium.connector.mysql.MySqlConnector",
     "tasks.max": "1",  
-    "database.hostname": "data-sync-db.cluster-xxxxxxxx.ap-northeast-1.rds.amazonaws.com",  
+    "database.hostname": "$MYSQL_HOST",  
     "database.port": "3306",
-    "database.user": "root",
-    "database.password": "xxxxxx",
-    "database.server.name": "source_datetest",  
-    "table.include.list": "data_source6.GridShareBonus_activity2inviteinfo",
+    "database.user": "xxx",
+    "database.password": "xxx",
+    "database.server.name": "source-test",  
+    "database.include.list": "testdatabase",
+    "table.exclude.list": "trade_service.django_admin_log,trade_service.django_content_type",
+    "database.history.kafka.bootstrap.servers": "$KAFKAS",  
     "time.precision.mode": "connect",
-    "database.history.kafka.bootstrap.servers": "b-1.data-sync-msk-clu.xxxxxx.c2.kafka.ap-northeast-1.amazonaws.com:9092,b-2.data-sync-msk-clu.xxxxxx.c2.kafka.ap-northeast-1.amazonaws.com:9092,b-3.data-sync-msk-clu.xxxxxx.c2.kafka.ap-northeast-1.amazonaws.com:9092",  
-    "database.history.kafka.topic": "schema-changes.datetest",
-    "transforms":"unwrap",
-    "transforms.unwrap.type":"io.debezium.transforms.UnwrapFromEnvelope",
-    "transforms.unwrap.drop.tombstones":"false",
-    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-    "key.converter.schemas.enable": "false",
-    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-    "value.converter.schemas.enable": "false",
-    "include.schema.changes": "false",
+    "database.history.kafka.topic": "schema-changes.source-test",
     "max.queue.size": "81290",
     "max.batch.size": "20480",
+    "snapshot.locking.mode": "none",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://kafka-connect-schema-registry.kafka-connect",
+    "key.converter": "io.confluent.connect.avro.AvroConverter",
+    "key.converter.schema.registry.url": "http://kafka-connect-schema-registry.kafka-connect",
     "topic.creation.default.cleanup.policy": "delete",
     "topic.creation.default.replication.factor": 3,
     "topic.creation.default.partitions": 1,
     "topic.creation.default.retention.ms": 7776000000,
-    "topic.creation.default.compression.type": "zstd",
     "producer.override.compression.type": "zstd",
-    "producer.override.buffer.memory": 167772160,
-    "producer.override.max.request.size": 314572800,
+    "producer.override.buffer.memory": 67108864,
+    "producer.override.max.request.size": 62914560,
     "producer.override.acks":"1"
   }
 }
 
 创建源同步配置:
-curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" http://kafka-connect-base.kafka-connect/connectors/ -d '{"name":"source-connector-datetest","config":{"connector.class":"io.debezium.connector.mysql.MySqlConnector","tasks.max":"1","database.hostname":"data-sync-db.cluster-xxxxxxxx.ap-northeast-1.rds.amazonaws.com","database.port":"3306","database.user":"root","database.password":"xxxxxx","database.server.name":"source_datetest","table.include.list":"data_source6.GridShareBonus_activity2inviteinfo","time.precision.mode":"connect","database.history.kafka.bootstrap.servers":"b-1.data-sync-msk-clu.xxxxxx.c2.kafka.ap-northeast-1.amazonaws.com:9092,b-2.data-sync-msk-clu.xxxxxx.c2.kafka.ap-northeast-1.amazonaws.com:9092,b-3.data-sync-msk-clu.xxxxxx.c2.kafka.ap-northeast-1.amazonaws.com:9092","database.history.kafka.topic":"schema-changes.datetest","transforms":"unwrap","transforms.unwrap.type":"io.debezium.transforms.UnwrapFromEnvelope","transforms.unwrap.drop.tombstones":"false","key.converter":"org.apache.kafka.connect.json.JsonConverter","key.converter.schemas.enable":"false","value.converter":"org.apache.kafka.connect.json.JsonConverter","value.converter.schemas.enable":"false","include.schema.changes":"false","max.queue.size":"81290","max.batch.size":"20480","topic.creation.default.cleanup.policy":"delete","topic.creation.default.replication.factor":3,"topic.creation.default.partitions":1,"topic.creation.default.retention.ms":7776000000,"topic.creation.default.compression.type":"zstd","producer.override.compression.type":"zstd","producer.override.buffer.memory":167772160,"producer.override.max.request.size":314572800,"producer.override.acks":"1"}}'
+curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" http://kafka-connect-base.kafka-connect/connectors/ -d '{"name":"source-test","config":{"connector.class":"io.debezium.connector.mysql.MySqlConnector","tasks.max":"1","database.hostname":"$MYSQL_HOST","database.port":"3306","database.user":"xxx","database.password":"xxx","database.server.name":"source-test","database.include.list":"testdatabase","table.exclude.list":"trade_service.django_admin_log,trade_service.django_content_type","database.history.kafka.bootstrap.servers":"$KAFKAS","time.precision.mode":"connect","database.history.kafka.topic":"schema-changes.source-test","max.queue.size":"81290","max.batch.size":"20480","snapshot.locking.mode":"none","value.converter":"io.confluent.connect.avro.AvroConverter","value.converter.schema.registry.url":"http://kafka-connect-schema-registry.kafka-connect","key.converter":"io.confluent.connect.avro.AvroConverter","key.converter.schema.registry.url":"http://kafka-connect-schema-registry.kafka-connect","topic.creation.default.cleanup.policy":"delete","topic.creation.default.replication.factor":3,"topic.creation.default.partitions":1,"topic.creation.default.retention.ms":7776000000,"producer.override.compression.type":"zstd","producer.override.buffer.memory":67108864,"producer.override.max.request.size":62914560,"producer.override.acks":"1"}}'
 
 
 
@@ -116,36 +113,64 @@ kafka-console-consumer.sh --bootstrap-server $KAFKAS --topic source_connector.da
 ### 输出器配置
 ```
 {
-    "name": "trade-service-sink",
+    "name": "sink-test",
     "config": {
         "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
         "tasks.max": "1",
-        "topics": "trade_service_source.trade_service.GridShareBonus_binancereward",
-        "connection.url": "jdbc:mysql://xxx:3306/trade_service_sink",
-        "connection.user": "root",
-        "connection.password": "xxx",
-        "transforms": "unwrap,dropTopicPrefix,TimestampConverter",
+        "topics.regex": "source-test.testdatabase.(.*)",
+        "connection.url": "jdbc:mysql://xxx:3306/sink",
+        "connection.user": "portfolio",
+        "connection.password": "uYp-LSH-JK6-oHx",
+        "transforms": "unwrap,dropTopicPrefix,IdMask",
         "transforms.dropTopicPrefix.type": "org.apache.kafka.connect.transforms.RegexRouter",
         "transforms.dropTopicPrefix.regex": "([^.]+)\\.([^.]+)\\.([^.]+)",
         "transforms.dropTopicPrefix.replacement": "$3",
+        "transforms.IdMask.type": "org.apache.kafka.connect.transforms.MaskField$Value",
+        "transforms.IdMask.fields": "id",
+        "transforms.IdMask.replacement": "0",
         "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
         "transforms.unwrap.drop.tombstones": "false",
-        "transforms.TimestampConverter.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
-        "transforms.TimestampConverter.field": "create_time",
-        "transforms.TimestampConverter.format": "yyyy-MM-dd HH:mm:ss.SSS",
-        "transforms.TimestampConverter.target.type": "string",
         "auto.create": "false",
         "auto.evolve": "false",
         "insert.mode": "upsert",
         "pk.fields": "id",
+        "batch.size": "500",
+        "consumer.override.fetch.min.bytes": "1500000",
+        "consumer.override.max.poll.records": "4000",
         "pk.mode": "record_value",
+        "errors.tolerance": "all",
         "table.name.format": "${topic}"
     }
 }
 
 
-curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" http://kafka-connect-main.kafka-connect/connectors/ -d '{"name":"trade-service-sink","config":{"connector.class":"io.confluent.connect.jdbc.JdbcSinkConnector","tasks.max":"1","topics":"trade_service_source.trade_service.GridShareBonus_binancereward","connection.url":"jdbc:mysql://xxx:3306/trade_service_sink","connection.user":"root","connection.password":"xxx","transforms":"unwrap,dropTopicPrefix,TimestampConverter","transforms.dropTopicPrefix.type":"org.apache.kafka.connect.transforms.RegexRouter","transforms.dropTopicPrefix.regex":"([^.]+)\\.([^.]+)\\.([^.]+)","transforms.dropTopicPrefix.replacement":"$3","transforms.unwrap.type":"io.debezium.transforms.ExtractNewRecordState","transforms.unwrap.drop.tombstones":"false","transforms.TimestampConverter.type":"org.apache.kafka.connect.transforms.TimestampConverter$Value","transforms.TimestampConverter.field":"create_time","transforms.TimestampConverter.format":"yyyy-MM-dd HH:mm:ss.SSS","transforms.TimestampConverter.target.type":"string","auto.create":"false","auto.evolve":"false","insert.mode":"upsert","pk.fields":"id","pk.mode":"record_value","table.name.format":"${topic}"}}'
+curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" http://kafka-connect-main.kafka-connect/connectors/ -d '{"name":"sink-test","config":{"connector.class":"io.confluent.connect.jdbc.JdbcSinkConnector","tasks.max":"1","topics.regex":"source-test.testdatabase.(.*)","connection.url":"jdbc:mysql://xxx:3306/sink","connection.user":"portfolio","connection.password":"uYp-LSH-JK6-oHx","transforms":"unwrap,dropTopicPrefix,IdMask","transforms.dropTopicPrefix.type":"org.apache.kafka.connect.transforms.RegexRouter","transforms.dropTopicPrefix.regex":"([^.]+)\\.([^.]+)\\.([^.]+)","transforms.dropTopicPrefix.replacement":"$3","transforms.IdMask.type":"org.apache.kafka.connect.transforms.MaskField$Value","transforms.IdMask.fields":"id","transforms.IdMask.replacement":"0","transforms.unwrap.type":"io.debezium.transforms.ExtractNewRecordState","transforms.unwrap.drop.tombstones":"false","auto.create":"false","auto.evolve":"false","insert.mode":"upsert","pk.fields":"id","batch.size":"500","consumer.override.fetch.min.bytes":"1500000","consumer.override.max.poll.records":"4000","pk.mode":"record_value","errors.tolerance":"all","table.name.format":"${topic}"}}'
 
 curl -H "Accept:application/json" http://kafka-connect-main.kafka-connect/connectors
 
 ```
+
+
+# 日志记录
+
+单独去每个节点上操作：
+```
+查看日志
+curl http://localhost:8083/admin/loggers
+
+修改日志等级
+curl -X PUT -H "Content-Type:application/json" http://localhost:8083/admin/loggers/io.confluent.connect.jdbc -d '{"level": "DEBUG"}'
+```
+
+# 不同情况下的思路
+
+a. 如果我们是两个db之间的数据同步，且数据量很大，那么可以考虑增量处理。
+
+1. 源db创建clone， 找到 binlog
+2. 从binlog 开始增量同步到kafka
+3. sink，开始, 从kafak数据实时同步到 clone db。
+
+b. db全量同步到kafka，且数据量很大，思路也一样
+1. 创建clone
+2. 从clone 同步数据（全量）
+3. 切换到主，从主再同步数据（增量）

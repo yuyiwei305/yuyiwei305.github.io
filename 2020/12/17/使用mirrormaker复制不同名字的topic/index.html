@@ -20,21 +20,21 @@
     var CONFIG = {"hostname":"visionyu.xyz","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="问题分析最近几天一直在排查k8s集群业务日志丢失的问题。现在业务集群上大概有十几个node跑了几百个pod。平时业务经常会更新。偶尔排查日志的时候发现个别的业务日志会采集不到，但是重启pod之后又可以采集到了。 这给问题排查造成了很大困扰。由于偶尔出现，所以不好去定位和排查相关的问题。简单说下目前集群日志采用的架构：基础就是elk，每个node节点通过demeonset方式部署filebeat,f">
+  <meta name="description" content="mirrormaker是kafka自带的topic复制工具，可以让两个集群之间的数据互相导入同步。 很多时候，我们需要把其中一个集群的某个topic数据，复制到另一个集群，但使用不同名字的topic。官方好像并没有提供这样功能，但留了一个message.handler的入口，我们可以通过额外的插件来实现这样的功能。 首先放上这个插件地址： https:&#x2F;&#x2F;github.com&#x2F;opencore&#x2F;m">
 <meta property="og:type" content="article">
-<meta property="og:title" content="关于k8s filebeat 日志丢失的处理以及分析">
-<meta property="og:url" content="https://visionyu.xyz/2020/04/08/%E5%85%B3%E4%BA%8Ek8s-filebeat-%E6%97%A5%E5%BF%97%E4%B8%A2%E5%A4%B1%E7%9A%84%E5%A4%84%E7%90%86%E4%BB%A5%E5%8F%8A%E5%88%86%E6%9E%90/index.html">
+<meta property="og:title" content="使用mirrormaker复制不同名字的topic">
+<meta property="og:url" content="https://visionyu.xyz/2020/12/17/%E4%BD%BF%E7%94%A8mirrormaker%E5%A4%8D%E5%88%B6%E4%B8%8D%E5%90%8C%E5%90%8D%E5%AD%97%E7%9A%84topic/index.html">
 <meta property="og:site_name" content="VisIonyu 的日常">
-<meta property="og:description" content="问题分析最近几天一直在排查k8s集群业务日志丢失的问题。现在业务集群上大概有十几个node跑了几百个pod。平时业务经常会更新。偶尔排查日志的时候发现个别的业务日志会采集不到，但是重启pod之后又可以采集到了。 这给问题排查造成了很大困扰。由于偶尔出现，所以不好去定位和排查相关的问题。简单说下目前集群日志采用的架构：基础就是elk，每个node节点通过demeonset方式部署filebeat,f">
+<meta property="og:description" content="mirrormaker是kafka自带的topic复制工具，可以让两个集群之间的数据互相导入同步。 很多时候，我们需要把其中一个集群的某个topic数据，复制到另一个集群，但使用不同名字的topic。官方好像并没有提供这样功能，但留了一个message.handler的入口，我们可以通过额外的插件来实现这样的功能。 首先放上这个插件地址： https:&#x2F;&#x2F;github.com&#x2F;opencore&#x2F;m">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2020-04-08T06:22:43.000Z">
-<meta property="article:modified_time" content="2020-04-10T08:09:50.296Z">
+<meta property="article:published_time" content="2020-12-17T12:19:07.000Z">
+<meta property="article:modified_time" content="2020-12-17T12:43:06.627Z">
 <meta property="article:author" content="VisIonyu">
-<meta property="article:tag" content="filebeat">
-<meta property="article:tag" content="kubernetes">
+<meta property="article:tag" content="kafka">
+<meta property="article:tag" content="mirrormaker">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="https://visionyu.xyz/2020/04/08/%E5%85%B3%E4%BA%8Ek8s-filebeat-%E6%97%A5%E5%BF%97%E4%B8%A2%E5%A4%B1%E7%9A%84%E5%A4%84%E7%90%86%E4%BB%A5%E5%8F%8A%E5%88%86%E6%9E%90/">
+<link rel="canonical" href="https://visionyu.xyz/2020/12/17/%E4%BD%BF%E7%94%A8mirrormaker%E5%A4%8D%E5%88%B6%E4%B8%8D%E5%90%8C%E5%90%8D%E5%AD%97%E7%9A%84topic/">
 
 
 <script id="page-configurations">
@@ -47,7 +47,7 @@
   };
 </script>
 
-  <title>关于k8s filebeat 日志丢失的处理以及分析 | VisIonyu 的日常</title>
+  <title>使用mirrormaker复制不同名字的topic | VisIonyu 的日常</title>
   
 
 
@@ -152,7 +152,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://visionyu.xyz/2020/04/08/%E5%85%B3%E4%BA%8Ek8s-filebeat-%E6%97%A5%E5%BF%97%E4%B8%A2%E5%A4%B1%E7%9A%84%E5%A4%84%E7%90%86%E4%BB%A5%E5%8F%8A%E5%88%86%E6%9E%90/">
+    <link itemprop="mainEntityOfPage" href="https://visionyu.xyz/2020/12/17/%E4%BD%BF%E7%94%A8mirrormaker%E5%A4%8D%E5%88%B6%E4%B8%8D%E5%90%8C%E5%90%8D%E5%AD%97%E7%9A%84topic/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -165,7 +165,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          关于k8s filebeat 日志丢失的处理以及分析
+          使用mirrormaker复制不同名字的topic
         </h1>
 
         <div class="post-meta">
@@ -175,7 +175,7 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2020-04-08 14:22:43" itemprop="dateCreated datePublished" datetime="2020-04-08T14:22:43+08:00">2020-04-08</time>
+              <time title="创建时间：2020-12-17 20:19:07" itemprop="dateCreated datePublished" datetime="2020-12-17T20:19:07+08:00">2020-12-17</time>
             </span>
 
           <br>
@@ -184,7 +184,7 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>2.2k</span>
+              <span>1.7k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
@@ -203,21 +203,31 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h3 id="问题分析"><a href="#问题分析" class="headerlink" title="问题分析"></a>问题分析</h3><p>最近几天一直在排查k8s集群业务日志丢失的问题。现在业务集群上大概有十几个node跑了几百个pod。平时业务经常会更新。偶尔排查日志的时候发现个别的业务日志会采集不到，<br>但是重启pod之后又可以采集到了。 这给问题排查造成了很大困扰。由于偶尔出现，所以不好去定位和排查相关的问题。<br>简单说下目前集群日志采用的架构：基础就是elk，每个node节点通过demeonset方式部署filebeat,filebeat的output设置为logstash，经过logstash简单的处理发送到electicserch，最后通过kibana展示 。<br>判断的思路： 结合出现问题的现象是个别的pod采集不到数据而不是整体另外重启相关pod后又可以重新采集日志。所以可以初步判断是filebeat的问题。<br>查询了下filebeat相关资料 了解到一条日志是如何被采集的：</p>
+        <p>mirrormaker是kafka自带的topic复制工具，可以让两个集群之间的数据互相导入同步。 很多时候，我们需要把其中一个集群的某个topic数据，复制到另一个集群，但使用不同名字的topic。<br>官方好像并没有提供这样功能，但留了一个message.handler的入口，我们可以通过额外的插件来实现这样的功能。</p>
+<p>首先放上这个插件地址： <a href="https://github.com/opencore/mirrormaker_topic_rename.git">https://github.com/opencore/mirrormaker_topic_rename.git</a></p>
+<p>使用方法：</p>
+<ol>
+<li><p>直接下载编译好的jar文件:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">wget https:&#x2F;&#x2F;github.com&#x2F;opencore&#x2F;mirrormaker_topic_rename&#x2F;files&#x2F;2024649&#x2F;mirrormaker_topic_rename.zip</span><br><span class="line">unzip mirrormaker_topic_rename.zip</span><br></pre></td></tr></table></figure></li>
+<li><p>添加环境变量：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># 由于执行mirrormaker可能需要导出比较大的数据量，所以建议适当加些内存。这个根据需要来调试。</span><br><span class="line">export KAFKA_HEAP_OPTS&#x3D;&quot;-Xmx3G&quot;</span><br><span class="line"># 2.这个必写，很关键</span><br><span class="line">export CLASSPATH&#x3D;&#x2F;mirrormaker_topic_rename&#x2F;target&#x2F;mmchangetopic-1.0-SNAPSHOT.jar</span><br><span class="line"># 3. 源kafka集群 后面均用其来代替</span><br><span class="line">export SOURCE_KAFKAS&#x3D;xxx:9092</span><br><span class="line"># 4. 目标kafka集群 后面均用其来代替</span><br><span class="line">export SOURCE_KAFKAS&#x3D;xxx:9092</span><br></pre></td></tr></table></figure>
 <a id="more"></a>
-<hr>
-<p>从代码的实现角度来看，filebeat大概可以分以下几个模块：</p>
-<p>input: 找到配置的日志文件，启动harvester<br>harvester: 读取文件，发送至spooler<br>spooler: 缓存日志数据，直到可以发送至publisher<br>publisher: 发送日志至后端，同时通知registrar<br>registrar: 记录日志文件被采集的状态</p>
-<hr>
-<p>从上述几个模块也看出整个的采集流程。现在的问题就是定位，到底是这几个步骤的哪一步？</p>
-<p>恰好我找到了一个服务日志采集不到的情况，不多说，重启该业务，同时查看filebeat报的什么日志：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#相关隐私信息已经改为xxxx</span><br><span class="line">2020-04-07T06:46:51.741Z INFO add_kubernetes_metadata&#x2F;kubernetes.go:68 add_kubernetes_metadata: kubernetes env detected, with version: v1.14.9-eks-502bfb</span><br><span class="line">2020-04-07T06:46:51.741Z INFO kubernetes&#x2F;util.go:94 kubernetes: Using pod name filebeat-filebeat-l7h55 and namespace filebeat to discover kubernetes node</span><br><span class="line">2020-04-07T06:46:51.745Z INFO kubernetes&#x2F;util.go:100 kubernetes: Using node xxx discovered by in cluster pod node query</span><br><span class="line">2020-04-07T06:46:51.846Z INFO log&#x2F;input.go:152 Configured paths: [&#x2F;var&#x2F;lib&#x2F;docker&#x2F;containers&#x2F;xxxxxxxxxx&#x2F;*.log]</span><br><span class="line">2020-04-07T06:46:51.846Z INFO input&#x2F;input.go:114 Starting input of type: container; ID: xxxxxxxxxx</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在目标kafka集群 提前创建好topic</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.&#x2F;kafka-topics.sh  --create --topic test_sink_topic  --bootstrap-server $SINK_KAFKAS --partitions 3 --replication-factor 3 --config retention.ms&#x3D;86400000</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>执行同步命令</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kafka-mirror-maker.sh --consumer.config &#x2F;consumer.properties --producer.config producer.properties --whitelist test_source_topic  --message.handler com.opencore.RenameTopicHandler --message.handler.args &#39;test_source_topic,test_sink_topic&#39;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>consumer.properties 和 producer.properties</p>
+</li>
+</ol>
+<p>这两个文件需要提前自己创建出来，我发现其实官方好像文档写的也不全。 我这里先贴出来我自己用的。</p>
+<p>consumer.properties</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">bootstrap.servers&#x3D;$SOURCE_KAFKAS(这个地方需要看着改改)</span><br><span class="line">group.id&#x3D;mirror_maker-group</span><br><span class="line">enable.auto.commit&#x3D;true</span><br><span class="line">auto.offset.reset&#x3D;earliest</span><br><span class="line">auto.commit.interval.ms&#x3D;1000</span><br><span class="line">partition.assignment.strategy&#x3D;org.apache.kafka.clients.consumer.RoundRobinAssignor</span><br></pre></td></tr></table></figure>
 
-<h3 id="问题处理"><a href="#问题处理" class="headerlink" title="问题处理"></a>问题处理</h3><p>通过日志可以清楚的看到，filebeat走的是文件发现这个流程，也就是说是在第一步。接下来的解决思路就很直接,想办法让filebeat文件发现即可。已知重启可以进行发现，那么证明filebeat本身配置没啥问题，而出错的<br>pod也不是一开始就不能采集日志，那么大概率就是pod的日志文件被删除或者是重置或者是和已有的什么冲突了导致。接下来思路就是看看能否让filebeat自己去排查，比如某个日志不更新了，关闭相关句柄重新发现之类的配置。<br>果然有相关配置：close_inactive  clean_inactive clean_remove ignore_older 。<br>所以最终我的配置文件改为：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">filebeat.autodiscover:</span><br><span class="line">      providers:</span><br><span class="line">        - type: kubernetes      </span><br><span class="line">          in_cluster: true    </span><br><span class="line">          hints.enabled: true</span><br><span class="line">          hints.default_config:          </span><br><span class="line">            type: container</span><br><span class="line">            paths:</span><br><span class="line">              - &#x2F;var&#x2F;lib&#x2F;docker&#x2F;containers&#x2F;$&#123;data.kubernetes.container.id&#125;&#x2F;*.log</span><br><span class="line">            processors:</span><br><span class="line">              - add_kubernetes_metadata:        </span><br><span class="line">              - add_fields:</span><br><span class="line">                  target: kubernetes</span><br><span class="line">                  fields:</span><br><span class="line">                    name: &quot;dev&quot;</span><br><span class="line">            max_bytes: 102400</span><br><span class="line">            close_inactive: 1m</span><br><span class="line">            ignore_older: 50m</span><br><span class="line">            clean_inactive: 60m</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
-
-<p>大概希望的效果就是 一分钟如果没有收到日志就关闭句柄，60分钟之后清理相关文件。 但愿改完之后日志丢失的事儿可以解决吧。 后续具体的参数调优可以慢慢来。<br>ps: 无论解决还是没有解决后续的进展我再继续补充。</p>
-<p>相关资料：  <a href="https://juejin.im/post/5d29376ae51d45507022702e">https://juejin.im/post/5d29376ae51d45507022702e</a></p>
+<p>producer.properties</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">bootstrap.servers&#x3D;$SOURCE_KAFKAS(这个地方需要看着改改)</span><br><span class="line">acks&#x3D;1</span><br><span class="line">linger.ms&#x3D;100</span><br><span class="line">batch.size&#x3D;16384</span><br><span class="line">retries&#x3D;3</span><br><span class="line">compression.type&#x3D;none</span><br></pre></td></tr></table></figure>
 
     </div>
 
@@ -227,8 +237,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/filebeat/" rel="tag"># filebeat</a>
-              <a href="/tags/kubernetes/" rel="tag"># kubernetes</a>
+              <a href="/tags/kafka/" rel="tag"># kafka</a>
+              <a href="/tags/mirrormaker/" rel="tag"># mirrormaker</a>
           </div>
 
         
@@ -237,13 +247,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2020/04/07/Mac-OS-%E8%A7%A3%E5%86%B3%E6%97%B6%E9%97%B4%E4%B8%8D%E5%90%8C%E6%AD%A5%E9%97%AE%E9%A2%98/" rel="prev" title="Mac OS 解决时间不同步问题">
-      <i class="fa fa-chevron-left"></i> Mac OS 解决时间不同步问题
+    <a href="/2020/10/20/%E4%BD%BF%E7%94%A8Debezium%E5%90%8C%E6%AD%A5mysql%E6%95%B0%E6%8D%AE%E5%88%B0kafaka/" rel="prev" title="使用Debezium同步mysql数据到kafaka">
+      <i class="fa fa-chevron-left"></i> 使用Debezium同步mysql数据到kafaka
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2020/04/10/%E5%88%A9%E7%94%A8AWS-EventBridge-%E5%AE%9E%E7%8E%B0%E6%95%85%E9%9A%9C%E8%87%AA%E6%84%88/" rel="next" title="利用AWS EventBridge 实现故障自愈">
-      利用AWS EventBridge 实现故障自愈 <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -302,7 +309,6 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#问题分析"><span class="nav-number">1.</span> <span class="nav-text">问题分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#问题处理"><span class="nav-number">2.</span> <span class="nav-text">问题处理</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 

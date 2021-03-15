@@ -119,8 +119,8 @@ kafka-console-consumer.sh --bootstrap-server $KAFKAS --topic source_connector.da
         "tasks.max": "1",
         "topics.regex": "source-test.testdatabase.(.*)",
         "connection.url": "jdbc:mysql://xxx:3306/sink",
-        "connection.user": "portfolio",
-        "connection.password": "uYp-LSH-JK6-oHx",
+        "connection.user": "XXX",
+        "connection.password": "XXXX",
         "transforms": "unwrap,dropTopicPrefix,IdMask",
         "transforms.dropTopicPrefix.type": "org.apache.kafka.connect.transforms.RegexRouter",
         "transforms.dropTopicPrefix.regex": "([^.]+)\\.([^.]+)\\.([^.]+)",
@@ -144,7 +144,7 @@ kafka-console-consumer.sh --bootstrap-server $KAFKAS --topic source_connector.da
 }
 
 
-curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" http://kafka-connect-main.kafka-connect/connectors/ -d '{"name":"sink-test","config":{"connector.class":"io.confluent.connect.jdbc.JdbcSinkConnector","tasks.max":"1","topics.regex":"source-test.testdatabase.(.*)","connection.url":"jdbc:mysql://xxx:3306/sink","connection.user":"portfolio","connection.password":"uYp-LSH-JK6-oHx","transforms":"unwrap,dropTopicPrefix,IdMask","transforms.dropTopicPrefix.type":"org.apache.kafka.connect.transforms.RegexRouter","transforms.dropTopicPrefix.regex":"([^.]+)\\.([^.]+)\\.([^.]+)","transforms.dropTopicPrefix.replacement":"$3","transforms.IdMask.type":"org.apache.kafka.connect.transforms.MaskField$Value","transforms.IdMask.fields":"id","transforms.IdMask.replacement":"0","transforms.unwrap.type":"io.debezium.transforms.ExtractNewRecordState","transforms.unwrap.drop.tombstones":"false","auto.create":"false","auto.evolve":"false","insert.mode":"upsert","pk.fields":"id","batch.size":"500","consumer.override.fetch.min.bytes":"1500000","consumer.override.max.poll.records":"4000","pk.mode":"record_value","errors.tolerance":"all","table.name.format":"${topic}"}}'
+curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" http://kafka-connect-main.kafka-connect/connectors/ -d '{"name":"sink-test","config":{"connector.class":"io.confluent.connect.jdbc.JdbcSinkConnector","tasks.max":"1","topics.regex":"source-test.testdatabase.(.*)","connection.url":"jdbc:mysql://xxx:3306/sink","connection.user":"XXXX","connection.password":"XXXX","transforms":"unwrap,dropTopicPrefix,IdMask","transforms.dropTopicPrefix.type":"org.apache.kafka.connect.transforms.RegexRouter","transforms.dropTopicPrefix.regex":"([^.]+)\\.([^.]+)\\.([^.]+)","transforms.dropTopicPrefix.replacement":"$3","transforms.IdMask.type":"org.apache.kafka.connect.transforms.MaskField$Value","transforms.IdMask.fields":"id","transforms.IdMask.replacement":"0","transforms.unwrap.type":"io.debezium.transforms.ExtractNewRecordState","transforms.unwrap.drop.tombstones":"false","auto.create":"false","auto.evolve":"false","insert.mode":"upsert","pk.fields":"id","batch.size":"500","consumer.override.fetch.min.bytes":"1500000","consumer.override.max.poll.records":"4000","pk.mode":"record_value","errors.tolerance":"all","table.name.format":"${topic}"}}'
 
 curl -H "Accept:application/json" http://kafka-connect-main.kafka-connect/connectors
 
